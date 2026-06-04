@@ -1,0 +1,64 @@
+<USER_REQUEST>
+okların state machine çizimlerinde doğru konumlandığından emin ol otomatik oynatma özelliği de gelsi BÖLÜM 1: PUSHDOWN OTOMATA (PDA) TASARIMLARI
+Hocanızın PDA tasarımlarında boşluk (hiçbir şey çekme/yazma) için genellikle Λ sembolünü kullandığını unutmayın.
+1. Klasikler ve Temeller
+a 
+n
+ b 
+n
+  (Eşitlik Kontrolü): a okudukça yığına a atılır (a,Λ→a). İlk b okunduğunda durum değiştirilir ve yığından a'lar silinir (b,a→Λ).
+wcw 
+R
+  (Ortası Belli Simetri): c harfini görene kadar okunan her şey yığına atılır (a,Λ→a vb.). c harfinde yığına dokunmadan durum atlanır (c,Λ→Λ). Sonrasında şeritten okunan harf, yığının en üstündekiyle aynıysa silinir (a,a→Λ).
+#(a)=#(b) (Sırasız Eşitlik): a ve b'lerin sırası karışık ama sayıları eşittir. Mantığı: Zıtlar birbirini yok eder. Şeritten a okunduğunda yığında b varsa silinir (a,b→Λ). Yığın boşsa veya yine a varsa yığına atılır (a,Λ→a). Aynı kural b okunduğunda da geçerlidir.
+2. Tahtada Çözülen İleri Düzey PDA'lar 🚨 (Finalin Kalbi)
+a 
+k
+ b 
+2k
+ dd (İki Katı ve Kuyruk): Okunan her a için yığına iki tane a (aa) atılır. Gelen her b için yığından bir a çekilir. b'ler bittiğinde yığın boşalmış olur; sondaki mecburi iki d harfi yığına hiç dokunmadan şeritten okunarak kabul durumuna gidilir.
+ab 
+k
+ c 
+k+1
+  (Fazladan Bir Harf Hilesi): Baştaki a yığına dokunulmadan okunur. Sonra gelen b'ler yığına atılır. c'ler geldiğinde ilk c harfi yığına dokunulmadan es geçilerek durum değiştirilir (c,Λ→Λ). Kalan c'ler ise yığındaki b'leri siler. Böylece 1 adet fazladan c tolere edilmiş olur.
+a 
+n
+ bc 
+n
+ ∪c 
+n
+ ba 
+n
+  (Nondeterministik 'Veya'): Makine başlangıçta Λ (Epsilon) geçişi ile ikiye ayrılır. Üst dal a'ları yığına atıp b'yi es geçerek c'lerle siler. Alt dal ise tam tersi c'leri yığına atıp b'yi es geçerek a'larla siler.
+aaw 
+1
+	
+ bbw 
+1
+R
+	
+ cc (Çoklu Ayırıcı): Tahtada yazılan bir 
+<truncated 6422 bytes>
+e makineyi iki farklı yola (dal) ayırarak, farklı şartları aynı otomat içinde sınama.
+Düzenli İfade PDA'sı ((ab) 
+∗
+ (cd) 
+∗
+ ): Normalde FSM ile çözülebilecek bir ifadeyi, yığına hiçbir şey eklemeden sadece şerit üzerinde okuma yaparak tasarlama.
+BÖLÜM 4: Turing Makinesi (TM - Tip 0)
+İkilik (Binary) Sayıya 1 Ekleme (succ(n)=n+1): Şeridin en sağına gidip sola doğru dönerken okunan 1'leri 0 yapma (elde var 1), ilk görülen 0'ı ise 1 yaparak durma mantığı.
+Katar Kopyalama (#w#→#w#w#): İlk harfi okuyup büyük harfe çevirerek işaretleme (Marking), en sağdaki boşluğa yazma ve bu işlemi tüm harfler bitene kadar tekrarlama.
+Kelimenin Tersini Birleştirme (ww 
+R
+  veya #abb#→#abbbba#): Kopyalama algoritmasının aynısını kelimeyi en sondan (sağdan sola) okumaya başlayarak işletme.
+Kelimeyi Tersine Çevirme (Reverse): Verilen katarı yeni bir alana kopyalamadan, direkt olduğu yerde #abbbb#→#baaaa# haline getirecek şekilde harf harf yer değiştirme.
+Matematiksel Çıkarma (n−m): Şeritte yer alan #11111−111# katarının sağından ve solundan karşılıklı olarak 1'leri silip işlemi sonlandırma.
+Çift/Tek Sayı Kontrolü (Parity Check): Katar uzunluğunun tek mi çift mi olduğunu (veya içindeki 1'lerin sayısını) Q_tek ve Q_çift durumları arasında gidip gelerek anlama ve sonuca göre şeride Y (Yes) veya N (No) yazma.
+Katar Kaydırma ve Sembol Silme: #uxv şeklindeki bir katarın içinden x simgesini silip, sağ tarafta kalan tüm karakterleri sola doğru kopyalayarak katarı bitiştirme.
+Alt Katar Arama: Uzun bir kelimenin içinde belirli bir katar (örn: "abc") geçiyor mu diye şeridi tarama ve şeridin en sağına arama sonucunu onay sembolüyle yazma.
+Tek Sayıda Harf Dönüşümü: Şeritte yan yana dizili A harfleri eğer tek sayıdaysa hepsini silip ortaya "M" karakteri (çift sayıdaysa "Y" karakteri) yazan döngüsel makine.
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-06-04T17:37:58+03:00.
+</ADDITIONAL_METADATA>

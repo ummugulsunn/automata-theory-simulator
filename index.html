@@ -1,0 +1,3497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Interactive Automata Theory Simulator — DFA, NFA, PDA, and Turing Machine visualization and step-by-step simulation tool.">
+  <title>Automata Theory Simulator &amp; Visualizer</title>
+
+  <!-- vis-network for state diagram visualization -->
+  <link href="https://unpkg.com/vis-network@9.1.6/dist/dist/vis-network.min.css" rel="stylesheet" />
+  <script src="https://unpkg.com/vis-network@9.1.6/dist/vis-network.min.js"></script>
+
+  <!-- Google Fonts: Inter + JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* ═══════════════════════════════════════════════════════════════
+       DESIGN SYSTEM — Dark mode engineering aesthetic
+       ═══════════════════════════════════════════════════════════════ */
+    :root {
+      --bg-primary: #0a0e17;
+      --bg-secondary: #111827;
+      --bg-tertiary: #1a2235;
+      --bg-elevated: #1f2a40;
+      --bg-input: #0d1321;
+
+      --accent-cyan: #06d6a0;
+      --accent-cyan-dim: #06d6a033;
+      --accent-blue: #4cc9f0;
+      --accent-purple: #7b61ff;
+      --accent-pink: #f72585;
+      --accent-orange: #ff9f1c;
+
+      --color-accept: #06d6a0;
+      --color-reject: #ef4444;
+      --color-running: #4cc9f0;
+
+      --text-primary: #e8ecf4;
+      --text-secondary: #8b99b0;
+      --text-tertiary: #5a6a80;
+
+      --border-subtle: #1e2d44;
+      --border-focus: #06d6a0;
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --shadow-glow: 0 0 20px rgba(6, 214, 160, 0.15);
+      --transition-fast: 150ms ease;
+      --transition-med: 250ms ease;
+
+      --font-sans: 'Inter', -apple-system, system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.5;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       LAYOUT — 3-panel grid
+       ═══════════════════════════════════════════════════════════════ */
+    #app-container {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      grid-template-rows: 50px 1fr 1fr;
+      height: 100vh;
+      gap: 1px;
+      background: var(--border-subtle);
+    }
+
+    #header-bar {
+      grid-column: 1 / -1;
+      grid-row: 1;
+      background: var(--bg-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    #header-bar h1 {
+      font-size: 15px; font-weight: 600; letter-spacing: 0.02em;
+      display: flex; align-items: center; gap: 10px;
+    }
+    #header-bar h1 .logo-icon {
+      width: 26px; height: 26px; border-radius: 6px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700; color: var(--bg-primary);
+    }
+    #header-bar .header-meta {
+      font-size: 12px; color: var(--text-secondary); font-family: var(--font-mono);
+    }
+
+    #input-panel {
+      grid-column: 1; grid-row: 2 / 4;
+      background: var(--bg-secondary);
+      overflow-y: auto; padding: 16px;
+    }
+    #viz-panel {
+      grid-column: 2; grid-row: 2;
+      background: var(--bg-primary);
+      position: relative; overflow: hidden;
+    }
+    #sim-panel {
+      grid-column: 2; grid-row: 3;
+      background: var(--bg-secondary);
+      overflow-y: auto; padding: 16px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       SHARED COMPONENTS
+       ═══════════════════════════════════════════════════════════════ */
+    .panel-title {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--text-secondary);
+      margin-bottom: 14px; padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .panel-title .dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--accent-cyan);
+    }
+    .form-group { margin-bottom: 14px; }
+    .form-group label {
+      display: block; font-size: 11px; font-weight: 500;
+      color: var(--text-secondary); margin-bottom: 5px;
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+
+    input[type="text"], textarea, select {
+      width: 100%; padding: 9px 12px;
+      background: var(--bg-input); border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm); color: var(--text-primary);
+      font-family: var(--font-mono); font-size: 13px;
+      transition: border-color var(--transition-fast); outline: none;
+    }
+    input[type="text"]:focus, textarea:focus, select:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px var(--accent-cyan-dim);
+    }
+    textarea { resize: vertical; min-height: 32px; }
+    select {
+      cursor: pointer; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238b99b0' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center;
+      padding-right: 30px;
+    }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 14px; border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm); background: var(--bg-tertiary);
+      color: var(--text-primary); font-family: var(--font-sans);
+      font-size: 12px; font-weight: 500; cursor: pointer;
+      transition: all var(--transition-fast); white-space: nowrap;
+    }
+    .btn:hover { background: var(--bg-elevated); border-color: var(--text-tertiary); }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn:disabled:hover { background: var(--bg-tertiary); border-color: var(--border-subtle); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-cyan), #04a67c);
+      border-color: var(--accent-cyan); color: var(--bg-primary); font-weight: 600;
+    }
+    .btn-primary:hover { box-shadow: var(--shadow-glow); transform: translateY(-1px); }
+    .btn-danger { border-color: var(--color-reject); color: var(--color-reject); }
+    .btn-danger:hover { background: rgba(239, 68, 68, 0.15); }
+    .btn-auto {
+      border-color: var(--accent-orange); color: var(--accent-orange);
+    }
+    .btn-auto:hover { background: rgba(255, 159, 28, 0.12); }
+    .btn-auto.playing {
+      background: rgba(255, 159, 28, 0.18);
+      border-color: var(--accent-orange);
+      animation: pulse-auto 1.5s ease infinite;
+    }
+    @keyframes pulse-auto {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255, 159, 28, 0.25); }
+      50% { box-shadow: 0 0 8px 2px rgba(255, 159, 28, 0.12); }
+    }
+    .btn-sm { padding: 5px 10px; font-size: 11px; }
+
+    .hint-text {
+      font-size: 10px; color: var(--text-tertiary);
+      margin-top: 3px; font-family: var(--font-mono);
+    }
+
+    /* ═══════════ INPUT PANEL ═══════════ */
+    #machine-type-select { font-size: 14px; font-weight: 600; padding: 10px 14px; background: var(--bg-tertiary); }
+
+    #transitions-container { margin-top: 6px; }
+
+    .transition-row {
+      display: flex; align-items: center; gap: 4px;
+      margin-bottom: 5px; padding: 5px 6px;
+      background: var(--bg-input); border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm); font-family: var(--font-mono);
+      font-size: 12px; flex-wrap: wrap;
+    }
+    .transition-row input {
+      width: 52px; padding: 4px 5px; font-size: 11px; text-align: center;
+    }
+    .transition-row .arrow { color: var(--accent-cyan); font-weight: 600; font-size: 13px; }
+    .transition-row .remove-btn {
+      background: none; border: none; color: var(--color-reject);
+      cursor: pointer; font-size: 15px; padding: 0 3px; opacity: 0.4;
+      transition: opacity var(--transition-fast);
+    }
+    .transition-row .remove-btn:hover { opacity: 1; }
+    .transition-label { color: var(--text-tertiary); font-size: 10px; min-width: 14px; text-align: center; }
+
+    #btn-add-transition { margin-top: 6px; width: 100%; justify-content: center; }
+    #btn-load-machine { margin-top: 16px; width: 100%; justify-content: center; padding: 11px; font-size: 13px; }
+
+    .preset-row { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; }
+    .preset-row select { flex: 1; font-size: 12px; }
+
+    /* ═══════════ VISUALIZATION PANEL ═══════════ */
+    #graph-container { width: 100%; height: 100%; }
+    #viz-panel .panel-label {
+      position: absolute; top: 10px; left: 14px; z-index: 10;
+      font-size: 10px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--text-tertiary);
+      background: var(--bg-primary); padding: 3px 8px; border-radius: 4px;
+      pointer-events: none;
+    }
+
+    /* ═══════════ SIMULATION PANEL ═══════════ */
+    .sim-controls {
+      display: flex; gap: 6px; align-items: center;
+      margin-bottom: 14px; flex-wrap: wrap;
+    }
+    .sim-controls input[type="text"] { flex: 1; min-width: 120px; }
+
+    /* Speed selector */
+    .speed-select {
+      width: 90px; padding: 6px 8px; font-size: 11px;
+      background: var(--bg-input); border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm); color: var(--accent-orange);
+      font-family: var(--font-mono); outline: none; cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='%23ff9f1c' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 6px center;
+      padding-right: 20px;
+    }
+
+    /* Status Banner */
+    #status-banner {
+      padding: 8px 14px; border-radius: var(--radius-sm);
+      font-size: 13px; font-weight: 600; text-align: center;
+      margin-bottom: 14px; border: 1px solid;
+      transition: all var(--transition-med); font-family: var(--font-mono);
+    }
+    #status-banner.idle { background: var(--bg-tertiary); border-color: var(--border-subtle); color: var(--text-secondary); }
+    #status-banner.running {
+      background: rgba(76, 201, 240, 0.1); border-color: var(--color-running);
+      color: var(--color-running); animation: pulse-border 2s ease infinite;
+    }
+    #status-banner.accepted {
+      background: rgba(6, 214, 160, 0.12); border-color: var(--color-accept); color: var(--color-accept);
+    }
+    #status-banner.rejected {
+      background: rgba(239, 68, 68, 0.12); border-color: var(--color-reject); color: var(--color-reject);
+    }
+    @keyframes pulse-border {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(76, 201, 240, 0.3); }
+      50% { box-shadow: 0 0 12px 2px rgba(76, 201, 240, 0.15); }
+    }
+
+    /* Tape */
+    .tape-container { margin-bottom: 14px; }
+    .tape-label {
+      font-size: 10px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--text-tertiary); margin-bottom: 6px;
+    }
+    .tape {
+      display: flex; gap: 2px; overflow-x: auto; padding: 6px 0;
+      scrollbar-width: thin; scrollbar-color: var(--bg-elevated) var(--bg-input);
+    }
+    .tape-cell {
+      min-width: 36px; height: 36px; display: flex;
+      align-items: center; justify-content: center;
+      background: var(--bg-input); border: 1px solid var(--border-subtle);
+      border-radius: 4px; font-family: var(--font-mono);
+      font-size: 14px; font-weight: 500; color: var(--text-primary);
+      transition: all var(--transition-fast); flex-shrink: 0;
+    }
+    .tape-cell.active {
+      background: var(--accent-cyan); color: var(--bg-primary);
+      border-color: var(--accent-cyan); font-weight: 700;
+      box-shadow: 0 0 10px rgba(6, 214, 160, 0.4); transform: scale(1.1);
+    }
+    .tape-cell.consumed { opacity: 0.35; }
+
+    .head-indicator { display: flex; gap: 2px; padding: 0; margin-top: 2px; }
+    .head-slot {
+      min-width: 36px; height: 14px; display: flex;
+      align-items: center; justify-content: center;
+      font-size: 10px; flex-shrink: 0;
+    }
+    .head-slot.active { color: var(--accent-cyan); font-weight: 700; }
+
+    /* Stack */
+    .stack-container { margin-bottom: 14px; }
+    .stack-visual {
+      display: flex; flex-direction: column-reverse; gap: 2px;
+      max-height: 180px; overflow-y: auto; padding: 6px;
+      background: var(--bg-input); border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm); min-height: 40px;
+    }
+    .stack-cell {
+      padding: 4px 12px; background: var(--bg-tertiary);
+      border: 1px solid var(--border-subtle); border-radius: 4px;
+      font-family: var(--font-mono); font-size: 13px;
+      text-align: center; color: var(--text-primary);
+    }
+    .stack-cell:last-child {
+      background: var(--accent-purple); color: #fff;
+      border-color: var(--accent-purple); font-weight: 600;
+    }
+    .stack-empty {
+      color: var(--text-tertiary); font-size: 11px;
+      font-style: italic; text-align: center; padding: 10px;
+    }
+
+    /* NFA states */
+    .nfa-states-container { margin-bottom: 14px; }
+    .nfa-active-states { display: flex; gap: 6px; flex-wrap: wrap; }
+    .nfa-state-badge {
+      padding: 4px 10px; background: var(--bg-tertiary);
+      border: 1px solid var(--accent-purple); border-radius: 20px;
+      font-family: var(--font-mono); font-size: 12px;
+      color: var(--accent-purple); font-weight: 500;
+    }
+    .nfa-state-badge.is-accept {
+      background: rgba(6, 214, 160, 0.15);
+      border-color: var(--color-accept); color: var(--color-accept);
+    }
+
+    /* Trace Table */
+    .trace-container { margin-top: 14px; }
+    .trace-table-wrapper {
+      max-height: 220px; overflow-y: auto;
+      border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);
+      scrollbar-width: thin; scrollbar-color: var(--bg-elevated) var(--bg-input);
+    }
+    .trace-table {
+      width: 100%; border-collapse: collapse;
+      font-family: var(--font-mono); font-size: 12px;
+    }
+    .trace-table th {
+      position: sticky; top: 0; background: var(--bg-tertiary);
+      color: var(--text-secondary); font-size: 10px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      padding: 6px 8px; text-align: left;
+      border-bottom: 1px solid var(--border-subtle); z-index: 1;
+    }
+    .trace-table td {
+      padding: 5px 8px; border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-primary); white-space: nowrap;
+    }
+    .trace-table tr:last-child td { border-bottom: none; }
+    .trace-table tr:hover td { background: var(--bg-tertiary); }
+    .trace-table .state-cell { color: var(--accent-cyan); font-weight: 600; }
+    .trace-table .action-cell { color: var(--text-secondary); font-size: 11px; }
+
+    .alert-error {
+      padding: 10px 14px; background: rgba(239, 68, 68, 0.1);
+      border: 1px solid var(--color-reject); border-radius: var(--radius-sm);
+      color: var(--color-reject); font-size: 12px; margin-bottom: 12px; display: none;
+    }
+    .alert-error.visible { display: block; animation: shake 0.3s ease; }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-4px); }
+      75% { transform: translateX(4px); }
+    }
+
+    .separator { border: none; border-top: 1px solid var(--border-subtle); margin: 16px 0; }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-input); }
+    ::-webkit-scrollbar-thumb { background: var(--bg-elevated); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
+
+    .sim-section { display: flex; gap: 16px; flex-wrap: wrap; }
+    .sim-section > * { flex: 1; min-width: 200px; }
+  </style>
+</head>
+<body>
+
+<div id="app-container">
+  <!-- HEADER -->
+  <header id="header-bar">
+    <h1><span class="logo-icon">λ</span> Automata Theory Simulator</h1>
+    <span class="header-meta">DFA · NFA · PDA · TM</span>
+  </header>
+
+  <!-- INPUT PANEL (Left) -->
+  <aside id="input-panel">
+    <div class="panel-title"><span class="dot"></span> Machine Definition</div>
+    <div id="input-error" class="alert-error"></div>
+
+    <!-- Preset examples -->
+    <div class="preset-row">
+      <select id="preset-select">
+        <option value="">— Load Example —</option>
+        <optgroup label="DFA (Sonlu Otomat)">
+          <option value="dfa-even-zeros">DFA: Çift sayıda 0</option>
+          <option value="dfa-ends-01">DFA: "01" ile biten</option>
+        </optgroup>
+        <optgroup label="NFA (Belirli Olmayan)">
+          <option value="nfa-ends-ab">NFA: "ab" ile biten</option>
+          <option value="nfa-epsilon">NFA: ε-geçişli örnek</option>
+        </optgroup>
+        <optgroup label="PDA — Temel">
+          <option value="pda-anbn">PDA: aⁿbⁿ (Eşitlik)</option>
+          <option value="pda-wcwr">PDA: wcwᴿ (Simetri)</option>
+          <option value="pda-equal-ab">PDA: #(a)=#(b) (Sırasız Eşit)</option>
+        </optgroup>
+        <optgroup label="PDA — İleri Düzey 🚨">
+          <option value="pda-ak-b2k-dd">PDA: aᵏb²ᵏdd (İki Katı)</option>
+          <option value="pda-abk-ck1">PDA: abᵏcᵏ⁺¹ (Fazladan Harf)</option>
+          <option value="pda-union">PDA: aⁿbcⁿ ∪ cⁿbaⁿ (Veya)</option>
+          <option value="pda-abcd">PDA: (ab)*(cd)* (Düzenli)</option>
+          <option value="pda-multi-sep">PDA: Çoklu Ayırıcı (aa w bb wR cc)</option>
+          <option value="pda-na-lt-nb">PDA: nₐ < n_b (Eşitsizlik)</option>
+          <option value="pda-range">PDA: aⁿbᵐ (n≤m≤2n)</option>
+        </optgroup>
+        <optgroup label="TM — Temel">
+          <option value="tm-anbn">TM: aⁿbⁿ (İşaretleme)</option>
+          <option value="tm-binary-inc">TM: Binary +1</option>
+          <option value="tm-parity">TM: Çift/Tek Kontrol</option>
+        </optgroup>
+        <optgroup label="TM — İleri Düzey 🚨">
+          <option value="tm-subtract">TM: Çıkarma (n−m)</option>
+          <option value="tm-copy">TM: Katar Kopyalama</option>
+        </optgroup>
+      </select>
+    </div>
+
+    <!-- Machine Type -->
+    <div class="form-group">
+      <label for="machine-type-select">Machine Type</label>
+      <select id="machine-type-select">
+        <option value="DFA">DFA — Deterministic Finite Automaton</option>
+        <option value="NFA">NFA — Nondeterministic FA (with ε)</option>
+        <option value="PDA">PDA — Pushdown Automaton</option>
+        <option value="TM">TM — Turing Machine</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="input-states">States (Q)</label>
+      <input type="text" id="input-states" placeholder="q0, q1, q2">
+      <div class="hint-text">Comma-separated</div>
+    </div>
+
+    <div class="form-group">
+      <label for="input-alphabet">Input Alphabet (Σ)</label>
+      <input type="text" id="input-alphabet" placeholder="0, 1">
+      <div class="hint-text">Comma-separated</div>
+    </div>
+
+    <div class="form-group" id="group-gamma" style="display:none;">
+      <label for="input-gamma" id="label-gamma">Stack Alphabet (Γ)</label>
+      <input type="text" id="input-gamma" placeholder="a, b, Z, $">
+      <div class="hint-text" id="hint-gamma">Include stack bottom marker</div>
+    </div>
+
+    <div class="form-group">
+      <label for="input-start">Start State (q₀)</label>
+      <input type="text" id="input-start" placeholder="q0">
+    </div>
+
+    <div class="form-group">
+      <label for="input-accept">Accept States (F)</label>
+      <input type="text" id="input-accept" placeholder="q2">
+      <div class="hint-text">Comma-separated</div>
+    </div>
+
+    <hr class="separator">
+
+    <div class="form-group">
+      <label>Transition Rules (δ)</label>
+      <div id="transition-header-hint" class="hint-text" style="margin-bottom:8px;"></div>
+      <div id="transitions-container"></div>
+      <button class="btn btn-sm" id="btn-add-transition" type="button">+ Add Rule</button>
+    </div>
+
+    <button class="btn btn-primary" id="btn-load-machine" type="button">▶ Load Machine</button>
+  </aside>
+
+  <!-- VISUALIZATION PANEL -->
+  <section id="viz-panel">
+    <span class="panel-label">◆ State Diagram</span>
+    <div id="graph-container"></div>
+  </section>
+
+  <!-- SIMULATION PANEL -->
+  <section id="sim-panel">
+    <div class="panel-title"><span class="dot"></span> Simulation &amp; Trace</div>
+    <div id="status-banner" class="idle">Ready — Load a machine to begin</div>
+
+    <div class="sim-controls">
+      <input type="text" id="input-string" placeholder="Test string (e.g. aabb)">
+      <button class="btn" id="btn-step" disabled>Step ▸</button>
+      <button class="btn btn-auto" id="btn-auto" disabled>▶ Auto</button>
+      <select class="speed-select" id="speed-select">
+        <option value="1200">Yavaş</option>
+        <option value="600" selected>Orta</option>
+        <option value="250">Hızlı</option>
+        <option value="80">Turbo</option>
+      </select>
+      <button class="btn" id="btn-run" disabled>Run ▸▸</button>
+      <button class="btn btn-danger" id="btn-reset" disabled>Reset</button>
+    </div>
+
+    <div class="sim-section">
+      <div class="tape-container" id="tape-section">
+        <div class="tape-label">Input Tape</div>
+        <div class="tape" id="tape-display"></div>
+        <div class="head-indicator" id="head-indicator"></div>
+      </div>
+      <div class="stack-container" id="stack-section" style="display:none;">
+        <div class="tape-label">Stack (top ↑)</div>
+        <div class="stack-visual" id="stack-display"><div class="stack-empty">Empty</div></div>
+      </div>
+    </div>
+
+    <div class="nfa-states-container" id="nfa-states-section" style="display:none;">
+      <div class="tape-label">Active State Set</div>
+      <div class="nfa-active-states" id="nfa-active-states"></div>
+    </div>
+
+    <div class="trace-container">
+      <div class="tape-label">Execution Trace</div>
+      <div class="trace-table-wrapper">
+        <table class="trace-table" id="trace-table">
+          <thead><tr id="trace-header"></tr></thead>
+          <tbody id="trace-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   AUTOMATA THEORY SIMULATOR — Full Logic
+   ═══════════════════════════════════════════════════════════════════════
+   Supports: DFA, NFA (with ε/Λ), PDA (nondeterministic), TM (single tape)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+// ─── Global State ────────────────────────────────────────────────
+let machine = null;
+let simState = null;
+let network = null;
+let visNodes = null;
+let visEdges = null;
+let stepCount = 0;
+let autoPlayTimer = null;   // Auto-play interval ID
+
+// ─── DOM References ──────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const machineTypeSelect   = $('machine-type-select');
+const inputStates         = $('input-states');
+const inputAlphabet       = $('input-alphabet');
+const inputGamma          = $('input-gamma');
+const inputStart          = $('input-start');
+const inputAccept         = $('input-accept');
+const groupGamma          = $('group-gamma');
+const labelGamma          = $('label-gamma');
+const hintGamma           = $('hint-gamma');
+const transitionsContainer = $('transitions-container');
+const transHeaderHint     = $('transition-header-hint');
+const btnAddTransition    = $('btn-add-transition');
+const btnLoadMachine      = $('btn-load-machine');
+const inputString         = $('input-string');
+const btnStep             = $('btn-step');
+const btnAuto             = $('btn-auto');
+const speedSelect         = $('speed-select');
+const btnRun              = $('btn-run');
+const btnReset            = $('btn-reset');
+const statusBanner        = $('status-banner');
+const tapeDisplay         = $('tape-display');
+const headIndicator       = $('head-indicator');
+const stackDisplay        = $('stack-display');
+const stackSection        = $('stack-section');
+const tapeSection         = $('tape-section');
+const nfaStatesSection    = $('nfa-states-section');
+const nfaActiveStates     = $('nfa-active-states');
+const traceHeader         = $('trace-header');
+const traceBody           = $('trace-body');
+const inputError          = $('input-error');
+const presetSelect        = $('preset-select');
+
+// ─── Helpers ─────────────────────────────────────────────────────
+function parseCSV(str) {
+  return str.split(',').map(s => s.trim()).filter(s => s.length > 0);
+}
+
+/** Normalize epsilon symbols: ε, Λ, eps, lambda, empty → 'ε' */
+function normalizeEpsilon(s) {
+  const v = s.trim();
+  if (v === '' || v === 'ε' || v === 'Λ' || v === 'λ' || v.toLowerCase() === 'eps' || v.toLowerCase() === 'lambda') return 'ε';
+  return v;
+}
+
+function showError(msg) { inputError.textContent = msg; inputError.classList.add('visible'); }
+function hideError() { inputError.classList.remove('visible'); }
+function formatSet(set) { return '{' + [...set].sort().join(', ') + '}'; }
+
+// ═══════════════════════════════════════════════════════════════
+// UI: Machine Type Toggle
+// ═══════════════════════════════════════════════════════════════
+function onMachineTypeChange() {
+  const type = machineTypeSelect.value;
+  if (type === 'PDA' || type === 'TM') {
+    groupGamma.style.display = '';
+    labelGamma.textContent = type === 'PDA' ? 'Stack Alphabet (Γ)' : 'Tape Alphabet (Γ)';
+    hintGamma.textContent  = type === 'PDA' ? 'Include $ (stack bottom)' : 'Superset of Σ, includes B (blank)';
+  } else {
+    groupGamma.style.display = 'none';
+  }
+  const hints = {
+    DFA: '(state, symbol) → next_state',
+    NFA: '(state, symbol) → next_state   [ε / Λ for epsilon]',
+    PDA: '(state, input, pop) → (next_state, push)   [ε/Λ = empty]',
+    TM:  '(state, read) → (next_state, write, L/R/S)'
+  };
+  transHeaderHint.textContent = hints[type];
+  transitionsContainer.innerHTML = '';
+  addTransitionRow();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Transition Row Builder
+// ═══════════════════════════════════════════════════════════════
+function addTransitionRow() {
+  const type = machineTypeSelect.value;
+  const row = document.createElement('div');
+  row.className = 'transition-row';
+
+  if (type === 'DFA' || type === 'NFA') {
+    row.innerHTML = `
+      <span class="transition-label">δ(</span>
+      <input type="text" class="tr-state" placeholder="q0">
+      <span class="transition-label">,</span>
+      <input type="text" class="tr-input" placeholder="${type === 'NFA' ? 'a/ε' : 'a'}">
+      <span class="transition-label">)</span>
+      <span class="arrow">→</span>
+      <input type="text" class="tr-next" placeholder="q1">
+      <button class="remove-btn" title="Remove" onclick="this.parentElement.remove()">×</button>`;
+  } else if (type === 'PDA') {
+    row.innerHTML = `
+      <span class="transition-label">δ(</span>
+      <input type="text" class="tr-state" placeholder="q0">
+      <span class="transition-label">,</span>
+      <input type="text" class="tr-input" placeholder="a/ε" style="width:42px">
+      <span class="transition-label">,</span>
+      <input type="text" class="tr-pop" placeholder="$/ε" style="width:42px">
+      <span class="transition-label">)</span>
+      <span class="arrow">→</span>
+      <span class="transition-label">(</span>
+      <input type="text" class="tr-next" placeholder="q1">
+      <span class="transition-label">,</span>
+      <input type="text" class="tr-push" placeholder="a$/ε" style="width:50px">
+      <span class="transition-label">)</span>
+      <button class="remove-btn" title="Remove" onclick="this.parentElement.remove()">×</button>`;
+  } else if (type === 'TM') {
+    row.innerHTML = `
+      <span class="transition-label">δ(</span>
+      <input type="text" class="tr-state" placeholder="q0">
+      <span class="transition-label">,</span>
+      <input type="text" class="tr-input" placeholder="a/B">
+      <span class="transition-label">)</span>
+      <span class="arrow">→</span>
+      <span class="transition-label">(</span>
+      <input type="text" class="tr-next" placeholder="q1">
+      <span class="transition-label">,</span>
+      <input type="text" class="tr-write" placeholder="X">
+      <span class="transition-label">,</span>
+      <input type="text" class="tr-dir" placeholder="R" style="width:34px">
+      <span class="transition-label">)</span>
+      <button class="remove-btn" title="Remove" onclick="this.parentElement.remove()">×</button>`;
+  }
+  transitionsContainer.appendChild(row);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Parse & Validate Machine Definition
+// ═══════════════════════════════════════════════════════════════
+function parseMachineDefinition() {
+  hideError();
+  const type = machineTypeSelect.value;
+  const states = parseCSV(inputStates.value);
+  const alphabet = parseCSV(inputAlphabet.value);
+  const startState = inputStart.value.trim();
+  const acceptStates = parseCSV(inputAccept.value);
+
+  if (!states.length) { showError('States (Q) cannot be empty.'); return null; }
+  if (!alphabet.length) { showError('Alphabet (Σ) cannot be empty.'); return null; }
+  if (!startState) { showError('Start state is required.'); return null; }
+  if (!states.includes(startState)) { showError(`Start state "${startState}" not in Q.`); return null; }
+  for (const s of acceptStates) {
+    if (!states.includes(s)) { showError(`Accept state "${s}" not in Q.`); return null; }
+  }
+
+  let gamma = [];
+  if (type === 'PDA' || type === 'TM') {
+    gamma = parseCSV(inputGamma.value);
+    if (!gamma.length) { showError('Γ cannot be empty.'); return null; }
+  }
+
+  const transitions = [];
+  const rows = transitionsContainer.querySelectorAll('.transition-row');
+
+  for (const row of rows) {
+    const state = row.querySelector('.tr-state')?.value.trim();
+    const rawInput = row.querySelector('.tr-input')?.value.trim() ?? '';
+    const next  = row.querySelector('.tr-next')?.value.trim();
+
+    if (!state && !rawInput && !next) continue;
+    const inputSym = normalizeEpsilon(rawInput);
+
+    if (!state || !next) { showError('Incomplete transition rule.'); return null; }
+    if (!states.includes(state)) { showError(`Unknown state "${state}".`); return null; }
+    if (!states.includes(next))  { showError(`Unknown state "${next}".`); return null; }
+
+    if (type === 'DFA') {
+      if (!alphabet.includes(inputSym)) { showError(`"${inputSym}" not in Σ.`); return null; }
+      transitions.push({ state, input: inputSym, next });
+    } else if (type === 'NFA') {
+      if (inputSym !== 'ε' && !alphabet.includes(inputSym)) { showError(`"${inputSym}" not in Σ and not ε.`); return null; }
+      transitions.push({ state, input: inputSym, next });
+    } else if (type === 'PDA') {
+      const pop  = normalizeEpsilon(row.querySelector('.tr-pop')?.value.trim() ?? '');
+      const push = normalizeEpsilon(row.querySelector('.tr-push')?.value.trim() ?? '');
+      transitions.push({ state, input: inputSym, pop, next, push });
+    } else if (type === 'TM') {
+      const writeSym = row.querySelector('.tr-write')?.value.trim();
+      const dir = row.querySelector('.tr-dir')?.value.trim().toUpperCase();
+      if (!writeSym) { showError('TM transition missing write symbol.'); return null; }
+      if (!['L', 'R', 'S'].includes(dir)) { showError(`Invalid direction "${dir}".`); return null; }
+      transitions.push({ state, input: inputSym, next, write: writeSym, dir });
+    }
+  }
+
+  if (!transitions.length) { showError('Need at least one transition.'); return null; }
+  return { type, states, alphabet, gamma, startState, acceptStates, transitions };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GRAPH VISUALIZATION — vis-network
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Build the state diagram. Key fix for arrows:
+ *  - Bidirectional edges (A→B and B→A) get opposite curvatures
+ *  - Self-loops get large roundness
+ *  - Multiple transitions between same pair are label-aggregated
+ */
+function buildGraph() {
+  if (!machine) return;
+
+  const nodeColorNormal = {
+    background: '#1f2a40', border: '#4cc9f0',
+    highlight: { background: '#06d6a0', border: '#06d6a0' },
+    hover: { background: '#253550', border: '#06d6a0' }
+  };
+  const nodeColorAccept = {
+    background: '#1a2235', border: '#06d6a0',
+    highlight: { background: '#06d6a0', border: '#06d6a0' },
+    hover: { background: '#1e2e40', border: '#06d6a0' }
+  };
+
+  const nodes = [];
+
+  // Invisible start indicator node
+  nodes.push({
+    id: '__start__', label: '', shape: 'dot', size: 0,
+    color: { background: 'transparent', border: 'transparent' },
+    fixed: false, physics: true
+  });
+
+  for (const s of machine.states) {
+    const isAccept = machine.acceptStates.includes(s);
+    nodes.push({
+      id: s, label: s,
+      shape: isAccept ? 'box' : 'ellipse',
+      borderWidth: isAccept ? 3 : 2,
+      borderWidthSelected: 4,
+      color: isAccept ? nodeColorAccept : nodeColorNormal,
+      font: { color: '#e8ecf4', size: 14, face: 'Inter, sans-serif' },
+      margin: 10,
+      shadow: isAccept ? { enabled: true, color: 'rgba(6,214,160,0.2)', size: 10 } : false
+    });
+  }
+
+  // Aggregate edges: group transitions by (from → to)
+  const edgeMap = new Map();
+  edgeMap.set('__start__->' + machine.startState, []);
+
+  for (const t of machine.transitions) {
+    const key = t.state + '->' + t.next;
+    if (!edgeMap.has(key)) edgeMap.set(key, []);
+    let label = '';
+    if (machine.type === 'DFA' || machine.type === 'NFA') {
+      label = t.input;
+    } else if (machine.type === 'PDA') {
+      label = `${t.input}, ${t.pop} → ${t.push}`;
+    } else if (machine.type === 'TM') {
+      label = `${t.input} → ${t.write}, ${t.dir}`;
+    }
+    edgeMap.get(key).push(label);
+  }
+
+  // Collect all pair keys for bidirectional detection
+  const allKeys = new Set(edgeMap.keys());
+
+  const edges = [];
+  for (const [key, labels] of edgeMap) {
+    const [from, to] = key.split('->');
+    const isStart = from === '__start__';
+    const reverseKey = to + '->' + from;
+    const isSelf = from === to;
+    const hasBidi = !isSelf && !isStart && allKeys.has(reverseKey);
+
+    /*
+     * ARROW POSITIONING FIX:
+     * - Self-loops: curvedCW with high roundness (0.5)
+     * - Bidirectional pairs: curvedCW with roundness 0.25
+     *   (the reverse edge also gets curvedCW 0.25, vis-network
+     *    naturally separates them since they go opposite directions)
+     * - Single-direction: straight or slight curve
+     */
+    let smooth;
+    if (isSelf) {
+      smooth = { type: 'curvedCW', roundness: 0.5 };
+    } else if (hasBidi) {
+      smooth = { type: 'curvedCW', roundness: 0.25 };
+    } else if (isStart) {
+      smooth = { type: 'curvedCW', roundness: 0.01 };
+    } else {
+      smooth = { type: 'dynamic' };
+    }
+
+    edges.push({
+      from, to,
+      label: isStart ? '' : labels.join('\n'),
+      arrows: {
+        to: { enabled: true, scaleFactor: isStart ? 1.2 : 0.9, type: 'arrow' }
+      },
+      color: {
+        color: isStart ? '#06d6a0' : '#5a6a80',
+        highlight: '#06d6a0',
+        hover: '#8b99b0'
+      },
+      font: {
+        color: '#a0b0c8', size: 11,
+        face: 'JetBrains Mono, monospace',
+        strokeWidth: 4, strokeColor: '#0a0e17',
+        multi: false, align: 'top'
+      },
+      smooth,
+      width: isStart ? 2.5 : 1.5,
+      selfReference: { size: 30, angle: Math.PI / 4 }
+    });
+  }
+
+  visNodes = new vis.DataSet(nodes);
+  visEdges = new vis.DataSet(edges);
+
+  const container = $('graph-container');
+  if (network) network.destroy();
+  network = new vis.Network(container, { nodes: visNodes, edges: visEdges }, {
+    physics: {
+      enabled: true,
+      solver: 'forceAtlas2Based',
+      forceAtlas2Based: {
+        gravitationalConstant: -50,
+        centralGravity: 0.01,
+        springLength: 160,
+        springConstant: 0.035,
+        damping: 0.5
+      },
+      stabilization: { iterations: 250 }
+    },
+    interaction: { hover: true, zoomView: true, dragView: true },
+    layout: { improvedLayout: true },
+    edges: {
+      arrows: { to: { enabled: true, scaleFactor: 0.9 } },
+      selectionWidth: 2
+    }
+  });
+}
+
+function highlightStates(activeStates) {
+  if (!visNodes || !machine) return;
+  for (const s of machine.states) {
+    const isAccept = machine.acceptStates.includes(s);
+    const isActive = activeStates.includes(s);
+    visNodes.update({
+      id: s,
+      color: isActive
+        ? { background: '#06d6a0', border: '#06d6a0' }
+        : isAccept
+          ? { background: '#1a2235', border: '#06d6a0' }
+          : { background: '#1f2a40', border: '#4cc9f0' },
+      font: { color: isActive ? '#0a0e17' : '#e8ecf4', size: 14, face: 'Inter, sans-serif' }
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TAPE & STACK RENDERING
+// ═══════════════════════════════════════════════════════════════
+function renderTape(tape, head, consumed) {
+  tapeDisplay.innerHTML = '';
+  headIndicator.innerHTML = '';
+  tape.forEach((sym, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'tape-cell';
+    if (i === head) cell.classList.add('active');
+    else if (consumed !== undefined && i < consumed) cell.classList.add('consumed');
+    cell.textContent = sym;
+    tapeDisplay.appendChild(cell);
+
+    const slot = document.createElement('div');
+    slot.className = 'head-slot';
+    if (i === head) { slot.classList.add('active'); slot.textContent = '▲'; }
+    headIndicator.appendChild(slot);
+  });
+  const ac = tapeDisplay.querySelector('.tape-cell.active');
+  if (ac) ac.scrollIntoView({ inline: 'center', behavior: 'smooth' });
+}
+
+function renderStack(stack) {
+  stackDisplay.innerHTML = '';
+  if (!stack.length) { stackDisplay.innerHTML = '<div class="stack-empty">Empty</div>'; return; }
+  stack.forEach(sym => {
+    const cell = document.createElement('div');
+    cell.className = 'stack-cell';
+    cell.textContent = sym;
+    stackDisplay.appendChild(cell);
+  });
+}
+
+function renderNFAStates(states) {
+  nfaActiveStates.innerHTML = '';
+  [...states].sort().forEach(s => {
+    const badge = document.createElement('div');
+    badge.className = 'nfa-state-badge';
+    if (machine.acceptStates.includes(s)) badge.classList.add('is-accept');
+    badge.textContent = s;
+    nfaActiveStates.appendChild(badge);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TRACE TABLE
+// ═══════════════════════════════════════════════════════════════
+function initTraceTable() {
+  traceHeader.innerHTML = '';
+  traceBody.innerHTML = '';
+  const cols = ['#', 'State'];
+  if (machine.type === 'TM') { cols.push('Tape', 'Head', 'Action'); }
+  else {
+    cols.push('Remaining');
+    if (machine.type === 'PDA') cols.push('Stack');
+    if (machine.type === 'NFA') cols.push('Active');
+    cols.push('Action');
+  }
+  cols.forEach(h => { const th = document.createElement('th'); th.textContent = h; traceHeader.appendChild(th); });
+}
+
+function addTraceRow(data) {
+  const tr = document.createElement('tr');
+  data.forEach((val, i) => {
+    const td = document.createElement('td');
+    td.textContent = val;
+    if (i === 1) td.className = 'state-cell';
+    if (i === data.length - 1) td.className = 'action-cell';
+    tr.appendChild(td);
+  });
+  traceBody.appendChild(tr);
+  traceBody.closest('.trace-table-wrapper').scrollTop = 999999;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SIMULATION ENGINE
+// ═══════════════════════════════════════════════════════════════
+
+function initSimulation() {
+  const str = inputString.value;
+  stepCount = 0;
+
+  if (machine.type === 'DFA') {
+    simState = { currentState: machine.startState, inputArr: str.split(''), pos: 0, done: false, result: null };
+    renderTape(simState.inputArr.length ? simState.inputArr : ['ε'], 0);
+    highlightStates([machine.startState]);
+    initTraceTable();
+    addTraceRow([0, machine.startState, str || 'ε', '', 'Start']);
+
+  } else if (machine.type === 'NFA') {
+    const initial = epsilonClosure(new Set([machine.startState]));
+    simState = { activeStates: initial, inputArr: str.split(''), pos: 0, done: false, result: null };
+    renderTape(simState.inputArr.length ? simState.inputArr : ['ε'], 0);
+    nfaStatesSection.style.display = '';
+    renderNFAStates(initial);
+    highlightStates([...initial]);
+    initTraceTable();
+    addTraceRow([0, formatSet(initial), str || 'ε', formatSet(initial), 'Start (ε-closure)']);
+
+  } else if (machine.type === 'PDA') {
+    simState = { configs: [{ state: machine.startState, pos: 0, stack: ['$'] }], inputArr: str.split(''), done: false, result: null };
+    stackSection.style.display = '';
+    renderTape(simState.inputArr.length ? simState.inputArr : ['ε'], 0);
+    renderStack(['$']);
+    highlightStates([machine.startState]);
+    initTraceTable();
+    addTraceRow([0, machine.startState, str || 'ε', '[$]', 'Start']);
+
+  } else if (machine.type === 'TM') {
+    const tapeArr = str.length ? str.split('') : ['B'];
+    const padded = ['B', 'B', ...tapeArr, 'B', 'B'];
+    simState = { tape: padded, head: 2, currentState: machine.startState, done: false, result: null };
+    renderTape(padded, 2);
+    highlightStates([machine.startState]);
+    initTraceTable();
+    addTraceRow([0, machine.startState, padded.join(''), 2, 'Start']);
+  }
+
+  setStatus('running');
+  btnStep.disabled = false;
+  btnAuto.disabled = false;
+  btnRun.disabled = false;
+  btnReset.disabled = false;
+}
+
+// ─── DFA Step ────────────────────────────────────────────────
+function stepDFA() {
+  if (simState.done) return;
+  if (simState.pos >= simState.inputArr.length) {
+    const ok = machine.acceptStates.includes(simState.currentState);
+    simState.done = true; simState.result = ok ? 'accepted' : 'rejected';
+    setStatus(simState.result); stepCount++;
+    addTraceRow([stepCount, simState.currentState, 'ε', '', ok ? '✓ ACCEPTED' : '✗ REJECTED']);
+    return;
+  }
+  const sym = simState.inputArr[simState.pos];
+  const t = machine.transitions.find(tr => tr.state === simState.currentState && tr.input === sym);
+  stepCount++;
+  if (!t) {
+    simState.done = true; simState.result = 'rejected'; setStatus('rejected');
+    addTraceRow([stepCount, simState.currentState, simState.inputArr.slice(simState.pos).join(''), '', `✗ No δ(${simState.currentState}, ${sym})`]);
+    return;
+  }
+  const prev = simState.currentState;
+  simState.currentState = t.next; simState.pos++;
+  renderTape(simState.inputArr, simState.pos, simState.pos);
+  highlightStates([simState.currentState]);
+  addTraceRow([stepCount, simState.currentState, simState.pos < simState.inputArr.length ? simState.inputArr.slice(simState.pos).join('') : 'ε', '', `δ(${prev}, ${sym}) = ${t.next}`]);
+}
+
+// ─── NFA ε-closure & Step ────────────────────────────────────
+function epsilonClosure(states) {
+  const closure = new Set(states);
+  const queue = [...states];
+  while (queue.length) {
+    const s = queue.shift();
+    for (const t of machine.transitions) {
+      if (t.state === s && t.input === 'ε' && !closure.has(t.next)) {
+        closure.add(t.next); queue.push(t.next);
+      }
+    }
+  }
+  return closure;
+}
+
+function stepNFA() {
+  if (simState.done) return;
+  if (simState.pos >= simState.inputArr.length) {
+    const ok = [...simState.activeStates].some(s => machine.acceptStates.includes(s));
+    simState.done = true; simState.result = ok ? 'accepted' : 'rejected';
+    setStatus(simState.result); stepCount++;
+    addTraceRow([stepCount, formatSet(simState.activeStates), 'ε', formatSet(simState.activeStates), ok ? '✓ ACCEPTED' : '✗ REJECTED']);
+    return;
+  }
+  const sym = simState.inputArr[simState.pos];
+  const next = new Set();
+  for (const s of simState.activeStates)
+    for (const t of machine.transitions)
+      if (t.state === s && t.input === sym) next.add(t.next);
+  const closed = epsilonClosure(next);
+  stepCount++;
+  if (!closed.size) {
+    simState.done = true; simState.result = 'rejected'; simState.activeStates = closed;
+    setStatus('rejected'); renderNFAStates(closed); highlightStates([]);
+    addTraceRow([stepCount, '∅', simState.inputArr.slice(simState.pos+1).join('') || 'ε', '∅', `✗ Dead on "${sym}"`]);
+    return;
+  }
+  simState.activeStates = closed; simState.pos++;
+  renderTape(simState.inputArr, simState.pos, simState.pos);
+  renderNFAStates(closed); highlightStates([...closed]);
+  addTraceRow([stepCount, formatSet(closed), simState.pos < simState.inputArr.length ? simState.inputArr.slice(simState.pos).join('') : 'ε', formatSet(closed), `Read "${sym}"`]);
+}
+
+// ─── PDA Step (Nondeterministic) ─────────────────────────────
+/**
+ * PDA simulation handles nondeterminism by tracking ALL active
+ * configurations {state, pos, stack}. On each step, every config
+ * tries every matching transition. A transition matches when:
+ *   1. State matches
+ *   2. Input matches current symbol, OR input is ε
+ *   3. Stack top matches pop symbol, OR pop is ε
+ *
+ * Push convention: characters are pushed left-to-right, so the
+ * LAST character of the push string ends up on top of the stack.
+ * Example: push "$a" → '$' goes deeper, 'a' on top.
+ */
+function stepPDA() {
+  if (simState.done) return;
+
+  const newConfigs = [];
+  let anyProgress = false;
+
+  for (const config of simState.configs) {
+    const { state, pos, stack } = config;
+    let moved = false;
+
+    for (const t of machine.transitions) {
+      if (t.state !== state) continue;
+
+      const inputOk = t.input === 'ε' || (pos < simState.inputArr.length && t.input === simState.inputArr[pos]);
+      if (!inputOk) continue;
+
+      const top = stack.length ? stack[stack.length - 1] : null;
+      const popOk = t.pop === 'ε' || (top !== null && t.pop === top);
+      if (!popOk) continue;
+
+      // Apply transition
+      const ns = [...stack];
+      if (t.pop !== 'ε') ns.pop();
+      if (t.push !== 'ε') { for (const ch of t.push) ns.push(ch); }
+      const np = t.input === 'ε' ? pos : pos + 1;
+      newConfigs.push({ state: t.next, pos: np, stack: ns });
+      moved = true; anyProgress = true;
+    }
+
+    // Keep stuck configs at end-of-input for acceptance check
+    if (!moved && pos >= simState.inputArr.length) newConfigs.push(config);
+  }
+
+  stepCount++;
+
+  if (!anyProgress) {
+    const ok = simState.configs.some(c => c.pos >= simState.inputArr.length && machine.acceptStates.includes(c.state));
+    simState.done = true; simState.result = ok ? 'accepted' : 'rejected'; setStatus(simState.result);
+    const dc = simState.configs[0] || { state: '?', pos: 0, stack: [] };
+    addTraceRow([stepCount, dc.state, dc.pos < simState.inputArr.length ? simState.inputArr.slice(dc.pos).join('') : 'ε', '[' + dc.stack.join('') + ']', ok ? '✓ ACCEPTED' : '✗ REJECTED']);
+    return;
+  }
+
+  // Deduplicate configs to prevent exponential blowup
+  const seen = new Set();
+  const deduped = [];
+  for (const c of newConfigs) {
+    const key = c.state + '|' + c.pos + '|' + c.stack.join(',');
+    if (!seen.has(key)) { seen.add(key); deduped.push(c); }
+  }
+  simState.configs = deduped;
+
+  const dc = deduped[0];
+  renderTape(simState.inputArr.length ? simState.inputArr : ['ε'], dc.pos, dc.pos);
+  renderStack(dc.stack);
+  highlightStates([...new Set(deduped.map(c => c.state))]);
+
+  const ss = [...new Set(deduped.map(c => c.state))];
+  addTraceRow([stepCount, ss.length === 1 ? ss[0] : formatSet(new Set(ss)), dc.pos < simState.inputArr.length ? simState.inputArr.slice(dc.pos).join('') : 'ε', '[' + dc.stack.join('') + ']', `${deduped.length} config(s)`]);
+}
+
+// ─── Turing Machine Step ─────────────────────────────────────
+/**
+ * TM step: δ(state, tape[head]) = (next, write, dir)
+ * The tape extends dynamically with blank 'B' on both sides.
+ */
+function stepTM() {
+  if (simState.done) return;
+  const readSym = simState.tape[simState.head];
+  const t = machine.transitions.find(tr => tr.state === simState.currentState && tr.input === readSym);
+  stepCount++;
+  if (!t) {
+    const ok = machine.acceptStates.includes(simState.currentState);
+    simState.done = true; simState.result = ok ? 'accepted' : 'rejected'; setStatus(simState.result);
+    addTraceRow([stepCount, simState.currentState, simState.tape.join(''), simState.head, ok ? '✓ HALT-ACCEPT' : '✗ HALT-REJECT']);
+    return;
+  }
+  const prev = simState.currentState;
+  simState.tape[simState.head] = t.write;
+  if (t.dir === 'R') { simState.head++; if (simState.head >= simState.tape.length) simState.tape.push('B'); }
+  else if (t.dir === 'L') { simState.head--; if (simState.head < 0) { simState.tape.unshift('B'); simState.head = 0; } }
+  simState.currentState = t.next;
+  renderTape(simState.tape, simState.head);
+  highlightStates([simState.currentState]);
+  addTraceRow([stepCount, simState.currentState, simState.tape.join(''), simState.head, `δ(${prev}, ${readSym})=(${t.next}, ${t.write}, ${t.dir})`]);
+}
+
+// ─── Unified Step Dispatcher ─────────────────────────────────
+function doStep() {
+  if (!machine || !simState || simState.done) return;
+  switch (machine.type) {
+    case 'DFA': stepDFA(); break;
+    case 'NFA': stepNFA(); break;
+    case 'PDA': stepPDA(); break;
+    case 'TM':  stepTM();  break;
+  }
+  if (simState.done) {
+    btnStep.disabled = true; btnRun.disabled = true;
+    stopAutoPlay();
+  }
+}
+
+function runToEnd() {
+  const MAX = 5000;
+  let n = 0;
+  while (!simState.done && n < MAX) { doStep(); n++; }
+  if (!simState.done) {
+    simState.done = true; simState.result = 'rejected'; setStatus('rejected');
+    addTraceRow([stepCount+1, '—', '—', '—', '⚠ Max steps exceeded']);
+    btnStep.disabled = true; btnRun.disabled = true;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// AUTO-PLAY
+// ═══════════════════════════════════════════════════════════════
+function toggleAutoPlay() {
+  if (autoPlayTimer) {
+    stopAutoPlay();
+  } else {
+    if (!simState) initSimulation();
+    if (simState.done) return;
+    const speed = parseInt(speedSelect.value, 10);
+    btnAuto.textContent = '⏸ Pause';
+    btnAuto.classList.add('playing');
+    autoPlayTimer = setInterval(() => {
+      if (!simState || simState.done) { stopAutoPlay(); return; }
+      doStep();
+    }, speed);
+  }
+}
+
+function stopAutoPlay() {
+  if (autoPlayTimer) { clearInterval(autoPlayTimer); autoPlayTimer = null; }
+  btnAuto.textContent = '▶ Auto';
+  btnAuto.classList.remove('playing');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STATUS
+// ═══════════════════════════════════════════════════════════════
+function setStatus(status) {
+  statusBanner.className = status;
+  const labels = {
+    idle: 'Ready — Load a machine to begin',
+    running: '● Simulation Running...',
+    accepted: '✓ String ACCEPTED',
+    rejected: '✗ String REJECTED'
+  };
+  statusBanner.textContent = labels[status] || status;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PRESET MACHINES — Complete Question Bank
+// ═══════════════════════════════════════════════════════════════
+
+const PRESETS = {
+  "dfa-even-zeros": {
+    "type": "DFA",
+    "states": "q0, q1",
+    "alphabet": "0, 1",
+    "gamma": "",
+    "start": "q0",
+    "accept": "q0",
+    "transitions": [
+      {
+        "state": "q0",
+        "input": "0",
+        "next": "q1"
+      },
+      {
+        "state": "q0",
+        "input": "1",
+        "next": "q0"
+      },
+      {
+        "state": "q1",
+        "input": "0",
+        "next": "q0"
+      },
+      {
+        "state": "q1",
+        "input": "1",
+        "next": "q1"
+      }
+    ],
+    "testString": "01001"
+  },
+  "dfa-ends-01": {
+    "type": "DFA",
+    "states": "q0, q1, q2",
+    "alphabet": "0, 1",
+    "gamma": "",
+    "start": "q0",
+    "accept": "q2",
+    "transitions": [
+      {
+        "state": "q0",
+        "input": "0",
+        "next": "q1"
+      },
+      {
+        "state": "q0",
+        "input": "1",
+        "next": "q0"
+      },
+      {
+        "state": "q1",
+        "input": "0",
+        "next": "q1"
+      },
+      {
+        "state": "q1",
+        "input": "1",
+        "next": "q2"
+      },
+      {
+        "state": "q2",
+        "input": "0",
+        "next": "q1"
+      },
+      {
+        "state": "q2",
+        "input": "1",
+        "next": "q0"
+      }
+    ],
+    "testString": "10101"
+  },
+  "nfa-ends-ab": {
+    "type": "NFA",
+    "states": "q0, q1, q2",
+    "alphabet": "a, b",
+    "gamma": "",
+    "start": "q0",
+    "accept": "q2",
+    "transitions": [
+      {
+        "state": "q0",
+        "input": "a",
+        "next": "q0"
+      },
+      {
+        "state": "q0",
+        "input": "b",
+        "next": "q0"
+      },
+      {
+        "state": "q0",
+        "input": "a",
+        "next": "q1"
+      },
+      {
+        "state": "q1",
+        "input": "b",
+        "next": "q2"
+      }
+    ],
+    "testString": "baab"
+  },
+  "nfa-epsilon": {
+    "type": "NFA",
+    "states": "q0, q1, q2, q3",
+    "alphabet": "a, b",
+    "gamma": "",
+    "start": "q0",
+    "accept": "q3",
+    "transitions": [
+      {
+        "state": "q0",
+        "input": "ε",
+        "next": "q1"
+      },
+      {
+        "state": "q0",
+        "input": "a",
+        "next": "q0"
+      },
+      {
+        "state": "q1",
+        "input": "b",
+        "next": "q2"
+      },
+      {
+        "state": "q2",
+        "input": "ε",
+        "next": "q3"
+      },
+      {
+        "state": "q2",
+        "input": "b",
+        "next": "q2"
+      }
+    ],
+    "testString": "aabb"
+  },
+  "pda-anbn": {
+    "type": "PDA",
+    "states": "q0, q1, qf",
+    "alphabet": "a, b",
+    "gamma": "a, $",
+    "start": "q0",
+    "accept": "qf",
+    "transitions": [
+      {
+        "state": "q0",
+        "input": "a",
+        "pop": "ε",
+        "next": "q0",
+        "push": "a"
+      },
+      {
+        "state": "q0",
+        "input": "b",
+        "pop": "a",
+        "next": "q1",
+        "push": "ε"
+      },
+      {
+        "state": "q1",
+        "input": "b",
+        "pop": "a",
+        "next": "q1",
+        "push": "ε"
+      },
+      {
+        "state": "q1",
+        "input": "ε",
+        "pop": "$",
+        "next": "qf",
+        "push": "ε"
+      }
+    ],
+    "testString": "aaabbb"
+  },
+  "pda-wcwr": {
+    "type": "PDA",
+    "states": "q0, q1, qf",
+    "alphabet": "a, b, c",
+    "gamma": "a, b, $",
+    "start": "q0",
+    "accept": "qf",
+    "transitions": [
+      {
+        "state": "q0",
+        "input": "a",
+        "pop": "ε",
+        "next": "q0",
+        "push": "a"
+      },
+      {
+        "state": "q0",
+        "input": "b",
+        "pop": "ε",
+        "next": "q0",
+        "push": "b"
+      },
+      {
+        "state": "q0",
+        "input": "c",
+        "pop": "ε",
+        "next": "q1",
+        "push": "ε"
+      },
+      {
+        "state": "q1",
+        "input": "a",
+        "pop": "a",
+        "next": "q1",
+        "push": "ε"
+      },
+      {
+        "state": "q1",
+        "input": "b",
+        "pop": "b",
+        "next": "q1",
+        "push": "ε"
+      },
+      {
+        "state": "q1",
+        "input": "ε",
+        "pop": "$",
+        "next": "qf",
+        "push": "ε"
+      }
+    ],
+    "testString": "abcba"
+  },
+  "pda-equal-ab": {
+    "type": "PDA",
+    "states": "q0, qf",
+    "alphabet": "a, b",
+    "gamma": "a, b, $",
+    "start": "q0",
+    "accept": "qf",
+    "transitions": [
+      {
+        "state": "q0",
+        "input": "a",
+        "pop": "b",
+        "next": "q0",
+        "push": "ε"
+      },
+      {
+        "state": "q0",
+        "input": "a",
+        "pop": "a",
+        "next": "q0",
+        "push": "aa"
+      },
+      {
+        "state": "q0",
+        "input": "a",
+        "pop": "$",
+        "next": "q0",
+        "push": "$a"
+      },
+      {
+        "state": "q0",
+        "input": "b",
+        "pop": "a",
+        "next": "q0",
+        "push": "ε"
+      },
+      {
+        "state": "q0",
+        "input": "b",
+        "pop": "b",
+        "next": "q0",
+        "push": "bb"
+      },
+      {
+        "state": "q0",
+        "input": "b",
+        "pop": "$",
+        "next": "q0",
+        "push": "$b"
+      },
+      {
+        "state": "q0",
+        "input": "ε",
+        "pop": "$",
+        "next": "qf",
+        "push": "ε"
+      }
+    ],
+    "testString": "abab"
+  },
+  "pda-ak-b2k-dd": {
+    "type": "PDA",
+    "states": "q0, q1, q2, qf",
+    "alphabet": "a, b, d",
+    "gamma": "a, $",
+    "start": "q0",
+    "accept": "qf",
+    "transitions": [
+      {
+        "state": "q0",
+        "input": "a",
+        "pop": "ε",
+        "next": "q0",
+        "push": "aa"
+      },
+      {
+        "state": "q0",
+        "input": "b",
+        "pop": "a",
+        "next": "q1",
+        "push": "ε"
+      },
+      {
+        "state": "q1",
+        "input": "b",
+        "pop": "a",
+        "next": "q1",
+        "push": "ε"
+      },
+      {
+        "state": "q1",
+        "input": "d",
+        "pop": "$",
+        "next": "q2",
+        "push": "$"
+      },
+      {
+        "state": "q2",
+        "input": "d",
+        "pop": "$",
+        "next": "qf",
+        "push": "ε"
+      }
+    ],
+    "testString": "aabbbbdd"
+  },
+  "pda-abk-ck1": {
+    "type": "PDA",
+    "states": "q0, q1, q2, qf",
+    "alphabet": "a, b, c",
+    "gamma": "b, $",
+    "start": "q0",
+    "accept": "qf",
+    "transitions": [
+      {
+        "state": "q0",
+        "input": "a",
+        "pop": "ε",
+        "next": "q1",
+        "push": "ε"
+      },
+      {
+        "state": "q1",
+        "input": "b",
+        "pop": "ε",
+        "next": "q1",
+        "push": "b"
+      },
+      {
+        "state": "q1",
+        "input": "c",
+        "pop": "ε",
+        "next": "q2",
+        "push": "ε"
+      },
+      {
+        "state": "q2",
+        "input": "c",
+        "pop": "b",
+        "next": "q2",
+        "push": "ε"
+      },
+      {
+        "state": "q2",
+        "input": "ε",
+        "pop": "$",
+        "next": "qf",
+        "push": "ε"
+      }
+    ],
+    "testString": "abbbcccc"
+  },
+  "pda-union": {
+    "type": "PDA",
+    "states": "q0, q1, q2, q3, q4, qf",
+    "alphabet": "a, b, c",
+    "gamma": "a, c, $",
+    "start": "q0",
+    "accept": "qf",
+    "transitions": [
+      {
+        "state": "q0",
+        "input": "ε",
+        "pop": "ε",
+        "next": "q1",
+        "push": "ε"
+      },
+      {
+        "state": "q1",
+        "input": "a",
+        "pop": "ε",
+        "next": "q1",
+        "push": "a"
+      },
+      {
+        "state": "q1",
+        "input": "b",
+        "pop": "ε",
+        "next": "q2",
+        "push": "ε"
+      },
+      {
+        "state": "q2",
+        "input": "c",
+        "pop": "a",
+        "next": "q2",
+        "push": "ε"
+      },
+      {
+        "state": "q2",
+        "input": "ε",
+        "pop": "$",
+        "next": "qf",
+        "push": "ε"
+      },
+      {
+        "state": "q0",
+        "input": "ε",
+        "pop": "ε",
+        "next": "q3",
+        "push": "ε"
+      },
+      {
+        "state": "q3",
+        "input": "c",
+        "pop": "ε",
+        "next": "q3",
+        "push": "c"
+      },
+      {
+        "state": "q3",
+        "input": "b",
+        "pop": "ε",
+        "next": "q4",
+        "push": "ε"
+      },
+      {
+        "state": "q4",
+        "input": "a",
+        "pop": "c",
+        "next": "q4",
+        "push": "ε"
+      },
+      {
+        "state": "q4",
+        "input": "ε",
+        "pop": "$",
+        "next": "qf",
+        "push": "ε"
+      }
+    ],
+    "testString": "aabcc"
+  },
+  "pda-abcd": {
+    "type": "PDA",
+    "states": "q0, q1, q2, q3",
+    "alphabet": "a, b, c, d",
+    "gamma": "$",
+    "start": "q0",
+    "accept": "q0, q3",
+    "transitions": [
+      {
+        "state": "q0",
+        "input": "a",
+        "pop": "ε",
+        "next": "q1",
+        "push": "ε"
+      },
+      {
+        "state": "q1",
+        "input": "b",
+        "pop": "ε",
+        "next": "q0",
+        "push": "ε"
+      },
+      {
+        "state": "q0",
+        "input": "c",
+        "pop": "ε",
+        "next": "q2",
+        "push": "ε"
+      },
+      {
+        "state": "q2",
+        "input": "d",
+        "pop": "ε",
+        "next": "q3",
+        "push": "ε"
+      },
+      {
+        "state": "q3",
+        "input": "c",
+        "pop": "ε",
+        "next": "q2",
+        "push": "ε"
+      }
+    ],
+    "testString": "ababcdcd"
+  },
+  "pda-na-lt-nb": {
+    "type": "PDA",
+    "states": "q0, qf",
+    "alphabet": "a, b",
+    "gamma": "a, b, $",
+    "start": "q0",
+    "accept": "qf",
+    "transitions": [
+      {
+        "state": "q0",
+        "input": "a",
+        "pop": "b",
+        "next": "q0",
+        "push": "ε"
+      },
+      {
+        "state": "q0",
+        "input": "a",
+        "pop": "a",
+        "next": "q0",
+        "push": "aa"
+      },
+      {
+        "state": "q0",
+        "input": "a",
+        "pop": "$",
+        "next": "q0",
+        "push": "$a"
+      },
+      {
+        "state": "q0",
+        "input": "b",
+        "pop": "a",
+        "next": "q0",
+        "push": "ε"
+      },
+      {
+        "state": "q0",
+        "input": "b",
+        "pop": "b",
+        "next": "q0",
+        "push": "bb"
+      },
+      {
+        "state": "q0",
+        "input": "b",
+        "pop": "$",
+        "next": "q0",
+        "push": "$b"
+      },
+      {
+        "state": "q0",
+        "input": "ε",
+        "pop": "b",
+        "next": "qf",
+        "push": "ε"
+      }
+    ],
+    "testString": "abb"
+  },
+  "pda-range": {
+    "type": "PDA",
+    "states": "q0, q1, qf",
+    "alphabet": "a, b",
+    "gamma": "X, $",
+    "start": "q0",
+    "accept": "qf",
+    "transitions": [
+      {
+        "state": "q0",
+        "input": "a",
+        "pop": "ε",
+        "next": "q0",
+        "push": "X"
+      },
+      {
+        "state": "q0",
+        "input": "a",
+        "pop": "ε",
+        "next": "q0",
+        "push": "XX"
+      },
+      {
+        "state": "q0",
+        "input": "b",
+        "pop": "X",
+        "next": "q1",
+        "push": "ε"
+      },
+      {
+        "state": "q1",
+        "input": "b",
+        "pop": "X",
+        "next": "q1",
+        "push": "ε"
+      },
+      {
+        "state": "q1",
+        "input": "ε",
+        "pop": "$",
+        "next": "qf",
+        "push": "ε"
+      }
+    ],
+    "testString": "aabbb"
+  },
+  "pda-multi-sep": {
+    "type": "PDA",
+    "states": "q0, q1, q2, q3, q4, qf",
+    "alphabet": "a, b, c, x, y",
+    "gamma": "x, y, $",
+    "start": "q0",
+    "accept": "qf",
+    "transitions": [
+      {
+        "state": "q0",
+        "input": "a",
+        "pop": "ε",
+        "next": "q0",
+        "push": "ε"
+      },
+      {
+        "state": "q0",
+        "input": "x",
+        "pop": "ε",
+        "next": "q1",
+        "push": "x"
+      },
+      {
+        "state": "q0",
+        "input": "y",
+        "pop": "ε",
+        "next": "q1",
+        "push": "y"
+      },
+      {
+        "state": "q1",
+        "input": "x",
+        "pop": "ε",
+        "next": "q1",
+        "push": "x"
+      },
+      {
+        "state": "q1",
+        "input": "y",
+        "pop": "ε",
+        "next": "q1",
+        "push": "y"
+      },
+      {
+        "state": "q1",
+        "input": "b",
+        "pop": "ε",
+        "next": "q2",
+        "push": "ε"
+      },
+      {
+        "state": "q2",
+        "input": "b",
+        "pop": "ε",
+        "next": "q3",
+        "push": "ε"
+      },
+      {
+        "state": "q3",
+        "input": "x",
+        "pop": "x",
+        "next": "q3",
+        "push": "ε"
+      },
+      {
+        "state": "q3",
+        "input": "y",
+        "pop": "y",
+        "next": "q3",
+        "push": "ε"
+      },
+      {
+        "state": "q3",
+        "input": "c",
+        "pop": "ε",
+        "next": "q4",
+        "push": "ε"
+      },
+      {
+        "state": "q4",
+        "input": "c",
+        "pop": "ε",
+        "next": "qf",
+        "push": "ε"
+      }
+    ],
+    "testString": "aaxybbxycc"
+  },
+  "tm-reverse-concat": {
+    "type": "TM",
+    "states": "q0, q1, q2, q3_a, q3_b, q4, q5, qf",
+    "alphabet": "a, b, #",
+    "gamma": "a, b, #, A, Y, _",
+    "start": "q0",
+    "accept": "qf",
+    "transitions": [
+      {
+        "state": "q0",
+        "input": "#",
+        "next": "q1",
+        "write": "#",
+        "dir": "R"
+      },
+      {
+        "state": "q1",
+        "input": "a",
+        "next": "q1",
+        "write": "a",
+        "dir": "R"
+      },
+      {
+        "state": "q1",
+        "input": "b",
+        "next": "q1",
+        "write": "b",
+        "dir": "R"
+      },
+      {
+        "state": "q1",
+        "input": "#",
+        "next": "q2",
+        "write": "#",
+        "dir": "L"
+      },
+      {
+        "state": "q2",
+        "input": "A",
+        "next": "q2",
+        "write": "A",
+        "dir": "L"
+      },
+      {
+        "state": "q2",
+        "input": "Y",
+        "next": "q2",
+        "write": "Y",
+        "dir": "L"
+      },
+      {
+        "state": "q2",
+        "input": "a",
+        "next": "q3_a",
+        "write": "A",
+        "dir": "R"
+      },
+      {
+        "state": "q2",
+        "input": "b",
+        "next": "q3_b",
+        "write": "Y",
+        "dir": "R"
+      },
+      {
+        "state": "q2",
+        "input": "#",
+        "next": "q5",
+        "write": "#",
+        "dir": "R"
+      },
+      {
+        "state": "q3_a",
+        "input": "#",
+        "next": "q3_a",
+        "write": "#",
+        "dir": "R"
+      },
+      {
+        "state": "q3_a",
+        "input": "a",
+        "next": "q3_a",
+        "write": "a",
+        "dir": "R"
+      },
+      {
+        "state": "q3_a",
+        "input": "b",
+        "next": "q3_a",
+        "write": "b",
+        "dir": "R"
+      },
+      {
+        "state": "q3_a",
+        "input": "A",
+        "next": "q3_a",
+        "write": "A",
+        "dir": "R"
+      },
+      {
+        "state": "q3_a",
+        "input": "Y",
+        "next": "q3_a",
+        "write": "Y",
+        "dir": "R"
+      },
+      {
+        "state": "q3_a",
+        "input": "_",
+        "next": "q4",
+        "write": "a",
+        "dir": "L"
+      },
+      {
+        "state": "q3_a",
+        "input": "B",
+        "next": "q4",
+        "write": "a",
+        "dir": "L"
+      },
+      {
+        "state": "q3_b",
+        "input": "#",
+        "next": "q3_b",
+        "write": "#",
+        "dir": "R"
+      },
+      {
+        "state": "q3_b",
+        "input": "a",
+        "next": "q3_b",
+        "write": "a",
+        "dir": "R"
+      },
+      {
+        "state": "q3_b",
+        "input": "b",
+        "next": "q3_b",
+        "write": "b",
+        "dir": "R"
+      },
+      {
+        "state": "q3_b",
+        "input": "A",
+        "next": "q3_b",
+        "write": "A",
+        "dir": "R"
+      },
+      {
+        "state": "q3_b",
+        "input": "Y",
+        "next": "q3_b",
+        "write": "Y",
+        "dir": "R"
+      },
+      {
+        "state": "q3_b",
+        "input": "_",
+        "next": "q4",
+        "write": "b",
+        "dir": "L"
+      },
+      {
+        "state": "q3_b",
+        "input": "B",
+        "next": "q4",
+        "write": "b",
+        "dir": "L"
+      },
+      {
+        "state": "q4",
+        "input": "a",
+        "next": "q4",
+        "write": "a",
+        "dir": "L"
+      },
+      {
+        "state": "q4",
+        "input": "b",
+        "next": "q4",
+        "write": "b",
+        "dir": "L"
+      },
+      {
+        "state": "q4",
+        "input": "#",
+        "next": "q2",
+        "write": "#",
+        "dir": "L"
+      },
+      {
+        "state": "q5",
+        "input": "A",
+        "next": "q5",
+        "write": "a",
+        "dir": "R"
+      },
+      {
+        "state": "q5",
+        "input": "Y",
+        "next": "q5",
+        "write": "b",
+        "dir": "R"
+      },
+      {
+        "state": "q5",
+        "input": "#",
+        "next": "qf",
+        "write": "#",
+        "dir": "S"
+      }
+    ],
+    "testString": "#abb#_"
+  },
+  "tm-reverse-inplace": {
+    "type": "TM",
+    "states": "q0, q_find_left, q_find_right_for_a, q_find_right_for_b, q_swap_for_a, q_swap_for_b, q_carry_a_to_left, q_carry_b_to_left, q_go_to_right_end, q_cleanup, qf",
+    "alphabet": "a, b, #",
+    "gamma": "a, b, #, A, B, X, Y, _",
+    "start": "q0",
+    "accept": "qf",
+    "transitions": [
+      {
+        "state": "q0",
+        "input": "#",
+        "next": "q_find_left",
+        "write": "#",
+        "dir": "R"
+      },
+      {
+        "state": "q_find_left",
+        "input": "A",
+        "next": "q_find_left",
+        "write": "A",
+        "dir": "R"
+      },
+      {
+        "state": "q_find_left",
+        "input": "B",
+        "next": "q_find_left",
+        "write": "B",
+        "dir": "R"
+      },
+      {
+        "state": "q_find_left",
+        "input": "a",
+        "next": "q_find_right_for_a",
+        "write": "X",
+        "dir": "R"
+      },
+      {
+        "state": "q_find_left",
+        "input": "b",
+        "next": "q_find_right_for_b",
+        "write": "Y",
+        "dir": "R"
+      },
+      {
+        "state": "q_find_left",
+        "input": "#",
+        "next": "q_cleanup",
+        "write": "#",
+        "dir": "L"
+      },
+      {
+        "state": "q_find_right_for_a",
+        "input": "a",
+        "next": "q_find_right_for_a",
+        "write": "a",
+        "dir": "R"
+      },
+      {
+        "state": "q_find_right_for_b",
+        "input": "a",
+        "next": "q_find_right_for_b",
+        "write": "a",
+        "dir": "R"
+      },
+      {
+        "state": "q_find_right_for_a",
+        "input": "b",
+        "next": "q_find_right_for_a",
+        "write": "b",
+        "dir": "R"
+      },
+      {
+        "state": "q_find_right_for_b",
+        "input": "b",
+        "next": "q_find_right_for_b",
+        "write": "b",
+        "dir": "R"
+      },
+      {
+        "state": "q_find_right_for_a",
+        "input": "A",
+        "next": "q_swap_for_a",
+        "write": "A",
+        "dir": "L"
+      },
+      {
+        "state": "q_find_right_for_b",
+        "input": "A",
+        "next": "q_swap_for_b",
+        "write": "A",
+        "dir": "L"
+      },
+      {
+        "state": "q_find_right_for_a",
+        "input": "B",
+        "next": "q_swap_for_a",
+        "write": "B",
+        "dir": "L"
+      },
+      {
+        "state": "q_find_right_for_b",
+        "input": "B",
+        "next": "q_swap_for_b",
+        "write": "B",
+        "dir": "L"
+      },
+      {
+        "state": "q_find_right_for_a",
+        "input": "#",
+        "next": "q_swap_for_a",
+        "write": "#",
+        "dir": "L"
+      },
+      {
+        "state": "q_find_right_for_b",
+        "input": "#",
+        "next": "q_swap_for_b",
+        "write": "#",
+        "dir": "L"
+      },
+      {
+        "state": "q_swap_for_a",
+        "input": "a",
+        "next": "q_carry_a_to_left",
+        "write": "A",
+        "dir": "L"
+      },
+      {
+        "state": "q_swap_for_a",
+        "input": "b",
+        "next": "q_carry_b_to_left",
+        "write": "A",
+        "dir": "L"
+      },
+      {
+        "state": "q_swap_for_a",
+        "input": "X",
+        "next": "q_go_to_right_end",
+        "write": "a",
+        "dir": "R"
+      },
+      {
+        "state": "q_swap_for_a",
+        "input": "Y",
+        "next": "q_go_to_right_end",
+        "write": "b",
+        "dir": "R"
+      },
+      {
+        "state": "q_swap_for_b",
+        "input": "a",
+        "next": "q_carry_a_to_left",
+        "write": "B",
+        "dir": "L"
+      },
+      {
+        "state": "q_swap_for_b",
+        "input": "b",
+        "next": "q_carry_b_to_left",
+        "write": "B",
+        "dir": "L"
+      },
+      {
+        "state": "q_swap_for_b",
+        "input": "X",
+        "next": "q_go_to_right_end",
+        "write": "a",
+        "dir": "R"
+      },
+      {
+        "state": "q_swap_for_b",
+        "input": "Y",
+        "next": "q_go_to_right_end",
+        "write": "b",
+        "dir": "R"
+      },
+      {
+        "state": "q_carry_a_to_left",
+        "input": "a",
+        "next": "q_carry_a_to_left",
+        "write": "a",
+        "dir": "L"
+      },
+      {
+        "state": "q_carry_a_to_left",
+        "input": "b",
+        "next": "q_carry_b_to_left",
+        "write": "b",
+        "dir": "L"
+      },
+      {
+        "state": "q_carry_a_to_left",
+        "input": "A",
+        "next": "q_carry_a_to_left",
+        "write": "A",
+        "dir": "L"
+      },
+      {
+        "state": "q_carry_a_to_left",
+        "input": "B",
+        "next": "q_carry_b_to_left",
+        "write": "B",
+        "dir": "L"
+      },
+      {
+        "state": "q_carry_a_to_left",
+        "input": "X",
+        "next": "q_find_left",
+        "write": "A",
+        "dir": "R"
+      },
+      {
+        "state": "q_carry_a_to_left",
+        "input": "Y",
+        "next": "q_find_left",
+        "write": "A",
+        "dir": "R"
+      },
+      {
+        "state": "q_carry_b_to_left",
+        "input": "a",
+        "next": "q_carry_b_to_left",
+        "write": "a",
+        "dir": "L"
+      },
+      {
+        "state": "q_carry_b_to_left",
+        "input": "b",
+        "next": "q_carry_b_to_left",
+        "write": "b",
+        "dir": "L"
+      },
+      {
+        "state": "q_carry_b_to_left",
+        "input": "A",
+        "next": "q_carry_b_to_left",
+        "write": "A",
+        "dir": "L"
+      },
+      {
+        "state": "q_carry_b_to_left",
+        "input": "B",
+        "next": "q_carry_b_to_left",
+        "write": "B",
+        "dir": "L"
+      },
+      {
+        "state": "q_carry_b_to_left",
+        "input": "X",
+        "next": "q_find_left",
+        "write": "B",
+        "dir": "R"
+      },
+      {
+        "state": "q_carry_b_to_left",
+        "input": "Y",
+        "next": "q_find_left",
+        "write": "B",
+        "dir": "R"
+      },
+      {
+        "state": "q_go_to_right_end",
+        "input": "a",
+        "next": "q_go_to_right_end",
+        "write": "a",
+        "dir": "R"
+      },
+      {
+        "state": "q_go_to_right_end",
+        "input": "b",
+        "next": "q_go_to_right_end",
+        "write": "b",
+        "dir": "R"
+      },
+      {
+        "state": "q_go_to_right_end",
+        "input": "A",
+        "next": "q_go_to_right_end",
+        "write": "A",
+        "dir": "R"
+      },
+      {
+        "state": "q_go_to_right_end",
+        "input": "B",
+        "next": "q_go_to_right_end",
+        "write": "B",
+        "dir": "R"
+      },
+      {
+        "state": "q_go_to_right_end",
+        "input": "#",
+        "next": "q_cleanup",
+        "write": "#",
+        "dir": "L"
+      },
+      {
+        "state": "q_cleanup",
+        "input": "A",
+        "next": "q_cleanup",
+        "write": "a",
+        "dir": "L"
+      },
+      {
+        "state": "q_cleanup",
+        "input": "B",
+        "next": "q_cleanup",
+        "write": "b",
+        "dir": "L"
+      },
+      {
+        "state": "q_cleanup",
+        "input": "a",
+        "next": "q_cleanup",
+        "write": "a",
+        "dir": "L"
+      },
+      {
+        "state": "q_cleanup",
+        "input": "b",
+        "next": "q_cleanup",
+        "write": "b",
+        "dir": "L"
+      },
+      {
+        "state": "q_cleanup",
+        "input": "#",
+        "next": "qf",
+        "write": "#",
+        "dir": "R"
+      }
+    ],
+    "testString": "#aba#"
+  },
+  "tm-shift-delete": {
+    "type": "TM",
+    "states": "q0, q_read, q_write_a, q_write_b, q_write_hash, q_next, qf",
+    "alphabet": "a, b, x, #",
+    "gamma": "a, b, x, #, _",
+    "start": "q0",
+    "accept": "qf",
+    "transitions": [
+      {
+        "state": "q0",
+        "input": "#",
+        "next": "q0",
+        "write": "#",
+        "dir": "R"
+      },
+      {
+        "state": "q0",
+        "input": "a",
+        "next": "q0",
+        "write": "a",
+        "dir": "R"
+      },
+      {
+        "state": "q0",
+        "input": "b",
+        "next": "q0",
+        "write": "b",
+        "dir": "R"
+      },
+      {
+        "state": "q0",
+        "input": "x",
+        "next": "q_read",
+        "write": "_",
+        "dir": "R"
+      },
+      {
+        "state": "q_read",
+        "input": "a",
+        "next": "q_write_a",
+        "write": "_",
+        "dir": "L"
+      },
+      {
+        "state": "q_read",
+        "input": "b",
+        "next": "q_write_b",
+        "write": "_",
+        "dir": "L"
+      },
+      {
+        "state": "q_read",
+        "input": "#",
+        "next": "q_write_hash",
+        "write": "_",
+        "dir": "L"
+      },
+      {
+        "state": "q_write_a",
+        "input": "_",
+        "next": "q_next",
+        "write": "a",
+        "dir": "R"
+      },
+      {
+        "state": "q_write_b",
+        "input": "_",
+        "next": "q_next",
+        "write": "b",
+        "dir": "R"
+      },
+      {
+        "state": "q_write_hash",
+        "input": "_",
+        "next": "qf",
+        "write": "#",
+        "dir": "S"
+      },
+      {
+        "state": "q_next",
+        "input": "_",
+        "next": "q_read",
+        "write": "_",
+        "dir": "R"
+      }
+    ],
+    "testString": "#axb#"
+  },
+  "tm-odd-even-transform": {
+    "type": "TM",
+    "states": "q0, q_odd, q_even, q_clean_Y, q_clean_M, qf",
+    "alphabet": "A",
+    "gamma": "A, B, M, Y, _",
+    "start": "q0",
+    "accept": "qf",
+    "transitions": [
+      {
+        "state": "q0",
+        "input": "A",
+        "next": "q_odd",
+        "write": "_",
+        "dir": "R"
+      },
+      {
+        "state": "q_odd",
+        "input": "A",
+        "next": "q_even",
+        "write": "_",
+        "dir": "R"
+      },
+      {
+        "state": "q_even",
+        "input": "A",
+        "next": "q_odd",
+        "write": "_",
+        "dir": "R"
+      },
+      {
+        "state": "q_odd",
+        "input": "B",
+        "next": "q_clean_M",
+        "write": "M",
+        "dir": "L"
+      },
+      {
+        "state": "q_even",
+        "input": "B",
+        "next": "q_clean_Y",
+        "write": "Y",
+        "dir": "L"
+      },
+      {
+        "state": "q_clean_M",
+        "input": "_",
+        "next": "q_clean_M",
+        "write": "_",
+        "dir": "L"
+      },
+      {
+        "state": "q_clean_M",
+        "input": "B",
+        "next": "qf",
+        "write": "B",
+        "dir": "R"
+      },
+      {
+        "state": "q_clean_Y",
+        "input": "_",
+        "next": "q_clean_Y",
+        "write": "_",
+        "dir": "L"
+      },
+      {
+        "state": "q_clean_Y",
+        "input": "B",
+        "next": "qf",
+        "write": "B",
+        "dir": "R"
+      }
+    ],
+    "testString": "AAA"
+  },
+  "tm-substring": {
+    "type": "TM",
+    "states": "q0, q1, q2, q_yes, q_no, q_rewind, qf",
+    "alphabet": "a, b, c",
+    "gamma": "a, b, c, Y, N, B",
+    "start": "q0",
+    "accept": "qf",
+    "transitions": [
+      {
+        "state": "q0",
+        "input": "a",
+        "next": "q1",
+        "write": "a",
+        "dir": "R"
+      },
+      {
+        "state": "q0",
+        "input": "b",
+        "next": "q0",
+        "write": "b",
+        "dir": "R"
+      },
+      {
+        "state": "q0",
+        "input": "c",
+        "next": "q0",
+        "write": "c",
+        "dir": "R"
+      },
+      {
+        "state": "q1",
+        "input": "b",
+        "next": "q2",
+        "write": "b",
+        "dir": "R"
+      },
+      {
+        "state": "q1",
+        "input": "a",
+        "next": "q1",
+        "write": "a",
+        "dir": "R"
+      },
+      {
+        "state": "q1",
+        "input": "c",
+        "next": "q0",
+        "write": "c",
+        "dir": "R"
+      },
+      {
+        "state": "q2",
+        "input": "c",
+        "next": "q_yes",
+        "write": "c",
+        "dir": "R"
+      },
+      {
+        "state": "q2",
+        "input": "a",
+        "next": "q1",
+        "write": "a",
+        "dir": "R"
+      },
+      {
+        "state": "q2",
+        "input": "b",
+        "next": "q0",
+        "write": "b",
+        "dir": "R"
+      },
+      {
+        "state": "q0",
+        "input": "B",
+        "next": "q_no",
+        "write": "B",
+        "dir": "R"
+      },
+      {
+        "state": "q1",
+        "input": "B",
+        "next": "q_no",
+        "write": "B",
+        "dir": "R"
+      },
+      {
+        "state": "q2",
+        "input": "B",
+        "next": "q_no",
+        "write": "B",
+        "dir": "R"
+      },
+      {
+        "state": "q_yes",
+        "input": "a",
+        "next": "q_yes",
+        "write": "a",
+        "dir": "R"
+      },
+      {
+        "state": "q_yes",
+        "input": "b",
+        "next": "q_yes",
+        "write": "b",
+        "dir": "R"
+      },
+      {
+        "state": "q_yes",
+        "input": "c",
+        "next": "q_yes",
+        "write": "c",
+        "dir": "R"
+      },
+      {
+        "state": "q_yes",
+        "input": "B",
+        "next": "qf",
+        "write": "Y",
+        "dir": "S"
+      },
+      {
+        "state": "q_no",
+        "input": "B",
+        "next": "qf",
+        "write": "N",
+        "dir": "S"
+      }
+    ],
+    "testString": "ababc"
+  },
+  "tm-anbn": {
+    "type": "TM",
+    "states": "q0, q1, q2, q3, q4",
+    "alphabet": "a, b",
+    "gamma": "a, b, X, Y, B",
+    "start": "q0",
+    "accept": "q4",
+    "transitions": [
+      {
+        "state": "q0",
+        "input": "a",
+        "next": "q1",
+        "write": "X",
+        "dir": "R"
+      },
+      {
+        "state": "q0",
+        "input": "Y",
+        "next": "q3",
+        "write": "Y",
+        "dir": "R"
+      },
+      {
+        "state": "q1",
+        "input": "a",
+        "next": "q1",
+        "write": "a",
+        "dir": "R"
+      },
+      {
+        "state": "q1",
+        "input": "Y",
+        "next": "q1",
+        "write": "Y",
+        "dir": "R"
+      },
+      {
+        "state": "q1",
+        "input": "b",
+        "next": "q2",
+        "write": "Y",
+        "dir": "L"
+      },
+      {
+        "state": "q2",
+        "input": "a",
+        "next": "q2",
+        "write": "a",
+        "dir": "L"
+      },
+      {
+        "state": "q2",
+        "input": "Y",
+        "next": "q2",
+        "write": "Y",
+        "dir": "L"
+      },
+      {
+        "state": "q2",
+        "input": "X",
+        "next": "q0",
+        "write": "X",
+        "dir": "R"
+      },
+      {
+        "state": "q3",
+        "input": "Y",
+        "next": "q3",
+        "write": "Y",
+        "dir": "R"
+      },
+      {
+        "state": "q3",
+        "input": "B",
+        "next": "q4",
+        "write": "B",
+        "dir": "S"
+      }
+    ],
+    "testString": "aabb"
+  },
+  "tm-binary-inc": {
+    "type": "TM",
+    "states": "q0, q1, qf",
+    "alphabet": "0, 1",
+    "gamma": "0, 1, B",
+    "start": "q0",
+    "accept": "qf",
+    "transitions": [
+      {
+        "state": "q0",
+        "input": "0",
+        "next": "q0",
+        "write": "0",
+        "dir": "R"
+      },
+      {
+        "state": "q0",
+        "input": "1",
+        "next": "q0",
+        "write": "1",
+        "dir": "R"
+      },
+      {
+        "state": "q0",
+        "input": "B",
+        "next": "q1",
+        "write": "B",
+        "dir": "L"
+      },
+      {
+        "state": "q1",
+        "input": "1",
+        "next": "q1",
+        "write": "0",
+        "dir": "L"
+      },
+      {
+        "state": "q1",
+        "input": "0",
+        "next": "qf",
+        "write": "1",
+        "dir": "S"
+      },
+      {
+        "state": "q1",
+        "input": "B",
+        "next": "qf",
+        "write": "1",
+        "dir": "S"
+      }
+    ],
+    "testString": "1011"
+  },
+  "tm-parity": {
+    "type": "TM",
+    "states": "qE, qO, qY, qN",
+    "alphabet": "0, 1",
+    "gamma": "0, 1, B, Y, N",
+    "start": "qE",
+    "accept": "qY",
+    "transitions": [
+      {
+        "state": "qE",
+        "input": "1",
+        "next": "qO",
+        "write": "1",
+        "dir": "R"
+      },
+      {
+        "state": "qE",
+        "input": "0",
+        "next": "qE",
+        "write": "0",
+        "dir": "R"
+      },
+      {
+        "state": "qO",
+        "input": "1",
+        "next": "qE",
+        "write": "1",
+        "dir": "R"
+      },
+      {
+        "state": "qO",
+        "input": "0",
+        "next": "qO",
+        "write": "0",
+        "dir": "R"
+      },
+      {
+        "state": "qE",
+        "input": "B",
+        "next": "qY",
+        "write": "Y",
+        "dir": "S"
+      },
+      {
+        "state": "qO",
+        "input": "B",
+        "next": "qN",
+        "write": "N",
+        "dir": "S"
+      }
+    ],
+    "testString": "11011"
+  },
+  "tm-subtract": {
+    "type": "TM",
+    "states": "q0, q1, q2, q3, q4, q5, q6, qf",
+    "alphabet": "1, -",
+    "gamma": "1, -, X, B",
+    "start": "q0",
+    "accept": "qf",
+    "transitions": [
+      {
+        "state": "q0",
+        "input": "1",
+        "next": "q0",
+        "write": "1",
+        "dir": "R"
+      },
+      {
+        "state": "q0",
+        "input": "X",
+        "next": "q0",
+        "write": "X",
+        "dir": "R"
+      },
+      {
+        "state": "q0",
+        "input": "-",
+        "next": "q1",
+        "write": "-",
+        "dir": "R"
+      },
+      {
+        "state": "q1",
+        "input": "1",
+        "next": "q1",
+        "write": "1",
+        "dir": "R"
+      },
+      {
+        "state": "q1",
+        "input": "B",
+        "next": "q2",
+        "write": "B",
+        "dir": "L"
+      },
+      {
+        "state": "q2",
+        "input": "1",
+        "next": "q3",
+        "write": "B",
+        "dir": "L"
+      },
+      {
+        "state": "q3",
+        "input": "1",
+        "next": "q3",
+        "write": "1",
+        "dir": "L"
+      },
+      {
+        "state": "q3",
+        "input": "-",
+        "next": "q4",
+        "write": "-",
+        "dir": "L"
+      },
+      {
+        "state": "q4",
+        "input": "1",
+        "next": "q4",
+        "write": "1",
+        "dir": "L"
+      },
+      {
+        "state": "q4",
+        "input": "X",
+        "next": "q5",
+        "write": "X",
+        "dir": "R"
+      },
+      {
+        "state": "q4",
+        "input": "B",
+        "next": "q5",
+        "write": "B",
+        "dir": "R"
+      },
+      {
+        "state": "q5",
+        "input": "1",
+        "next": "q0",
+        "write": "X",
+        "dir": "R"
+      },
+      {
+        "state": "q2",
+        "input": "-",
+        "next": "q6",
+        "write": "B",
+        "dir": "L"
+      },
+      {
+        "state": "q6",
+        "input": "X",
+        "next": "q6",
+        "write": "1",
+        "dir": "L"
+      },
+      {
+        "state": "q6",
+        "input": "1",
+        "next": "q6",
+        "write": "1",
+        "dir": "L"
+      },
+      {
+        "state": "q6",
+        "input": "B",
+        "next": "qf",
+        "write": "B",
+        "dir": "R"
+      },
+      {
+        "state": "q5",
+        "input": "-",
+        "next": "q6",
+        "write": "B",
+        "dir": "L"
+      }
+    ],
+    "testString": "111-11"
+  },
+  "tm-copy": {
+    "type": "TM",
+    "states": "q0, q1, q2_a, q2_b, q3, q4, q5, q6, qf",
+    "alphabet": "a, b, #",
+    "gamma": "a, b, #, A, Y, _",
+    "start": "q0",
+    "accept": "qf",
+    "transitions": [
+      {
+        "state": "q0",
+        "input": "#",
+        "next": "q1",
+        "write": "#",
+        "dir": "R"
+      },
+      {
+        "state": "q1",
+        "input": "a",
+        "next": "q2_a",
+        "write": "A",
+        "dir": "R"
+      },
+      {
+        "state": "q1",
+        "input": "b",
+        "next": "q2_b",
+        "write": "Y",
+        "dir": "R"
+      },
+      {
+        "state": "q1",
+        "input": "A",
+        "next": "q1",
+        "write": "A",
+        "dir": "R"
+      },
+      {
+        "state": "q1",
+        "input": "Y",
+        "next": "q1",
+        "write": "Y",
+        "dir": "R"
+      },
+      {
+        "state": "q1",
+        "input": "#",
+        "next": "q4",
+        "write": "#",
+        "dir": "R"
+      },
+      {
+        "state": "q2_a",
+        "input": "a",
+        "next": "q2_a",
+        "write": "a",
+        "dir": "R"
+      },
+      {
+        "state": "q2_a",
+        "input": "b",
+        "next": "q2_a",
+        "write": "b",
+        "dir": "R"
+      },
+      {
+        "state": "q2_a",
+        "input": "A",
+        "next": "q2_a",
+        "write": "A",
+        "dir": "R"
+      },
+      {
+        "state": "q2_a",
+        "input": "Y",
+        "next": "q2_a",
+        "write": "Y",
+        "dir": "R"
+      },
+      {
+        "state": "q2_a",
+        "input": "#",
+        "next": "q2_a",
+        "write": "#",
+        "dir": "R"
+      },
+      {
+        "state": "q2_a",
+        "input": "_",
+        "next": "q3",
+        "write": "a",
+        "dir": "L"
+      },
+      {
+        "state": "q2_a",
+        "input": "B",
+        "next": "q3",
+        "write": "a",
+        "dir": "L"
+      },
+      {
+        "state": "q2_b",
+        "input": "a",
+        "next": "q2_b",
+        "write": "a",
+        "dir": "R"
+      },
+      {
+        "state": "q2_b",
+        "input": "b",
+        "next": "q2_b",
+        "write": "b",
+        "dir": "R"
+      },
+      {
+        "state": "q2_b",
+        "input": "A",
+        "next": "q2_b",
+        "write": "A",
+        "dir": "R"
+      },
+      {
+        "state": "q2_b",
+        "input": "Y",
+        "next": "q2_b",
+        "write": "Y",
+        "dir": "R"
+      },
+      {
+        "state": "q2_b",
+        "input": "#",
+        "next": "q2_b",
+        "write": "#",
+        "dir": "R"
+      },
+      {
+        "state": "q2_b",
+        "input": "_",
+        "next": "q3",
+        "write": "b",
+        "dir": "L"
+      },
+      {
+        "state": "q2_b",
+        "input": "B",
+        "next": "q3",
+        "write": "b",
+        "dir": "L"
+      },
+      {
+        "state": "q3",
+        "input": "a",
+        "next": "q3",
+        "write": "a",
+        "dir": "L"
+      },
+      {
+        "state": "q3",
+        "input": "b",
+        "next": "q3",
+        "write": "b",
+        "dir": "L"
+      },
+      {
+        "state": "q3",
+        "input": "#",
+        "next": "q3",
+        "write": "#",
+        "dir": "L"
+      },
+      {
+        "state": "q3",
+        "input": "A",
+        "next": "q1",
+        "write": "A",
+        "dir": "R"
+      },
+      {
+        "state": "q3",
+        "input": "Y",
+        "next": "q1",
+        "write": "Y",
+        "dir": "R"
+      },
+      {
+        "state": "q4",
+        "input": "a",
+        "next": "q4",
+        "write": "a",
+        "dir": "R"
+      },
+      {
+        "state": "q4",
+        "input": "b",
+        "next": "q4",
+        "write": "b",
+        "dir": "R"
+      },
+      {
+        "state": "q4",
+        "input": "_",
+        "next": "q5",
+        "write": "#",
+        "dir": "L"
+      },
+      {
+        "state": "q4",
+        "input": "B",
+        "next": "q5",
+        "write": "#",
+        "dir": "L"
+      },
+      {
+        "state": "q5",
+        "input": "a",
+        "next": "q5",
+        "write": "a",
+        "dir": "L"
+      },
+      {
+        "state": "q5",
+        "input": "b",
+        "next": "q5",
+        "write": "b",
+        "dir": "L"
+      },
+      {
+        "state": "q5",
+        "input": "#",
+        "next": "q6",
+        "write": "#",
+        "dir": "L"
+      },
+      {
+        "state": "q6",
+        "input": "A",
+        "next": "q6",
+        "write": "a",
+        "dir": "L"
+      },
+      {
+        "state": "q6",
+        "input": "Y",
+        "next": "q6",
+        "write": "b",
+        "dir": "L"
+      },
+      {
+        "state": "q6",
+        "input": "#",
+        "next": "qf",
+        "write": "#",
+        "dir": "R"
+      }
+    ],
+    "testString": "#aab#"
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// LOAD PRESET
+// ═══════════════════════════════════════════════════════════════
+function loadPreset(id) {
+  const p = PRESETS[id];
+  if (!p) return;
+  machineTypeSelect.value = p.type;
+  onMachineTypeChange();
+  inputStates.value = p.states;
+  inputAlphabet.value = p.alphabet;
+  inputGamma.value = p.gamma;
+  inputStart.value = p.start;
+  inputAccept.value = p.accept;
+  inputString.value = p.testString;
+
+  transitionsContainer.innerHTML = '';
+  for (const t of p.transitions) {
+    addTransitionRow();
+    const row = transitionsContainer.lastElementChild;
+    row.querySelector('.tr-state').value = t.state;
+    row.querySelector('.tr-input').value = t.input;
+    row.querySelector('.tr-next').value = t.next;
+    if (p.type === 'PDA') {
+      row.querySelector('.tr-pop').value = t.pop;
+      row.querySelector('.tr-push').value = t.push;
+    }
+    if (p.type === 'TM') {
+      row.querySelector('.tr-write').value = t.write;
+      row.querySelector('.tr-dir').value = t.dir;
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EVENT HANDLERS
+// ═══════════════════════════════════════════════════════════════
+machineTypeSelect.addEventListener('change', onMachineTypeChange);
+btnAddTransition.addEventListener('click', () => addTransitionRow());
+presetSelect.addEventListener('change', () => { if (presetSelect.value) loadPreset(presetSelect.value); });
+
+btnLoadMachine.addEventListener('click', () => {
+  const def = parseMachineDefinition();
+  if (!def) return;
+  machine = def;
+  buildGraph();
+  stackSection.style.display = machine.type === 'PDA' ? '' : 'none';
+  nfaStatesSection.style.display = machine.type === 'NFA' ? '' : 'none';
+  tapeSection.querySelector('.tape-label').textContent = machine.type === 'TM' ? 'Turing Machine Tape' : 'Input Tape';
+  resetSimulation();
+  setStatus('idle');
+  statusBanner.textContent = `✓ ${machine.type} loaded — Enter string, click Step or Auto`;
+  btnStep.disabled = false; btnAuto.disabled = false; btnRun.disabled = false; btnReset.disabled = false;
+});
+
+btnStep.addEventListener('click', () => {
+  if (!simState) initSimulation(); else doStep();
+});
+
+btnAuto.addEventListener('click', toggleAutoPlay);
+
+// Speed change while auto-playing: restart interval
+speedSelect.addEventListener('change', () => {
+  if (autoPlayTimer) { stopAutoPlay(); toggleAutoPlay(); }
+});
+
+btnRun.addEventListener('click', () => {
+  stopAutoPlay();
+  if (!simState) initSimulation();
+  runToEnd();
+});
+
+btnReset.addEventListener('click', resetSimulation);
+
+function resetSimulation() {
+  stopAutoPlay();
+  simState = null; stepCount = 0;
+  tapeDisplay.innerHTML = ''; headIndicator.innerHTML = '';
+  stackDisplay.innerHTML = '<div class="stack-empty">Empty</div>';
+  nfaActiveStates.innerHTML = '';
+  traceBody.innerHTML = ''; traceHeader.innerHTML = '';
+  setStatus('idle');
+  btnStep.disabled = !machine; btnAuto.disabled = !machine; btnRun.disabled = !machine;
+  if (machine) { highlightStates([]); statusBanner.textContent = `${machine.type} ready — Enter string`; }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+onMachineTypeChange();
+loadPreset('dfa-even-zeros');
+</script>
+</body>
+</html>

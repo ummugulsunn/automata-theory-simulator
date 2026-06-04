@@ -1,0 +1,46 @@
+<USER_REQUEST>
+Act as an Expert Software Engineer and Automata Theory Professor. Your task is to build a comprehensive, interactive "Automata Theory Simulator and Visualizer" web application as a single-file HTML/CSS/JS solution (or React component, depending on your environment).
+
+# CORE REQUIREMENTS
+The tool must support the creation, visualization, and step-by-step simulation of 4 types of machines:
+1. DFA (Deterministic Finite Automaton)
+2. NFA (Nondeterministic Finite Automaton - including Epsilon transitions)
+3. PDA (Pushdown Automaton)
+4. TM (Turing Machine - Deterministic, single tape)
+
+# UI/UX LAYOUT
+The interface should have a modern, dark-mode engineering aesthetic. Divide the screen into 3 main panels:
+1. INPUT PANEL (Left):
+   - A dropdown to select the Machine Type (DFA, NFA, PDA, TM).
+   - Textareas or input fields to define the machine's formal definition: States (Q), Alphabet (Σ), Tape/Stack Alphabet (Γ), Start State (q0), Accept States (F).
+   - A dynamic input area to add Transition Rules (Delta).
+     * For DFA/NFA: (Current State, Input) -> (Next State)
+     * For PDA: (Current State, Input, Pop) -> (Next State, Push)
+     * For TM: (Current State, Input) -> (Next State, Write, Move L/R/S)
+
+2. VISUALIZATION PANEL (Top Right):
+   - Use a graph visualization library (like vis-network.js or Mermaid.js via CDN) to automatically draw the State Diagram based on the transition rules.
+   - Highlight the "Current State" in a different color during the simulation.
+
+3. SIMULATION & TRACE PANEL (Bottom Right):
+   - An input field to enter a test string (e.g., "aabb" or "1011").
+   - Buttons: "Load Machine", "Step Forward", "Run to End", "Reset".
+   - A visual representation of the Input Tape (highlighting the current read head position).
+   - A visual representation of the Stack (for PDA) growing from bottom to top.
+   - A detailed "Trace Table" appending a new row on each step, showing: [Step Number, Current State, Remaining Input, Stack/Tape Status, Action Taken].
+   - A status banner showing if the string is currently "Running", "Accepted (Green)", or "Rejected (Red)".
+
+# TECHNICAL LOGIC & CONSTRAINTS
+- NFA Simulation: You must handle branching paths (Nondeterminism). For the step-by-step trace, you can maintain a list of all currently active states.
+- PDA Logic: Remember that PDAs can also be nondeterministic. If implementing a deterministic PDA for simplicity, state that clearly. The stack must handle 'ε' (Epsilon) pops and pushes correctly.
+- Turing Machine Logic: The tape must be conceptually infinite in both directions. Pad the visual tape with 'B' (Blanks) dynamically as the head moves left or right beyond the initial string.
+- Error Handling: Prevent invalid transitions and alert the user if they enter symbols not defined in the alphabets.
+
+Please generate the complete, production-ready code for this tool. Include inline comments explaining the Automata Theory logic (especially the transition execution functions).
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-06-04T17:28:18+03:00.
+</ADDITIONAL_METADATA>
+<USER_SETTINGS_CHANGE>
+The user changed setting `Model Selection` from None to Claude Opus 4.6 (Thinking). No need to comment on this change if the user doesn't ask about it. If reporting what model you are, please use a human readable name instead of the exact string.
+</USER_SETTINGS_CHANGE>
