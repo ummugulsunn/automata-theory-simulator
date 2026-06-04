@@ -392,6 +392,120 @@
 
     .sim-section { display: flex; gap: 16px; flex-wrap: wrap; }
     .sim-section > * { flex: 1; min-width: 200px; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       TOOLS MODAL
+       ═══════════════════════════════════════════════════════════════ */
+    .btn-tools {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border: 1px solid var(--accent-purple);
+      border-radius: var(--radius-sm); background: rgba(123, 97, 255, 0.1);
+      color: var(--accent-purple); font-family: var(--font-sans);
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    .btn-tools:hover { background: rgba(123, 97, 255, 0.2); box-shadow: 0 0 12px rgba(123,97,255,0.2); transform: translateY(-1px); }
+
+    #tools-modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 1000;
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);
+      justify-content: center; align-items: center;
+      animation: fadeIn 0.2s ease;
+    }
+    #tools-modal-overlay.visible { display: flex; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .tools-modal {
+      background: var(--bg-secondary); border: 1px solid var(--border-subtle);
+      border-radius: 12px; width: 720px; max-width: 92vw; max-height: 85vh;
+      display: flex; flex-direction: column; overflow: hidden;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 0 40px rgba(123,97,255,0.1);
+      animation: modalSlideIn 0.25s ease;
+    }
+    @keyframes modalSlideIn { from { transform: translateY(20px) scale(0.97); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+
+    .tools-modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; border-bottom: 1px solid var(--border-subtle);
+    }
+    .tools-modal-header h2 {
+      font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px;
+    }
+    .tools-modal-close {
+      background: none; border: none; color: var(--text-secondary); font-size: 20px;
+      cursor: pointer; padding: 4px 8px; border-radius: 4px; transition: all var(--transition-fast);
+    }
+    .tools-modal-close:hover { color: var(--text-primary); background: var(--bg-elevated); }
+
+    .tools-tabs {
+      display: flex; border-bottom: 1px solid var(--border-subtle); padding: 0 20px;
+    }
+    .tools-tab {
+      padding: 10px 16px; font-size: 12px; font-weight: 500;
+      color: var(--text-secondary); cursor: pointer; border: none; background: none;
+      border-bottom: 2px solid transparent; transition: all var(--transition-fast);
+      white-space: nowrap;
+    }
+    .tools-tab:hover { color: var(--text-primary); }
+    .tools-tab.active { color: var(--accent-purple); border-bottom-color: var(--accent-purple); }
+
+    .tools-body { padding: 20px; overflow-y: auto; flex: 1; }
+    .tools-panel { display: none; }
+    .tools-panel.active { display: block; }
+
+    .tools-desc {
+      font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;
+      line-height: 1.6; padding: 12px; background: var(--bg-tertiary);
+      border-radius: var(--radius-sm); border-left: 3px solid var(--accent-purple);
+    }
+
+    .tools-action-bar {
+      display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap;
+    }
+    .tools-action-bar input[type="text"] {
+      flex: 1; min-width: 180px; padding: 9px 12px;
+    }
+
+    .tools-result {
+      background: var(--bg-primary); border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm); padding: 16px; min-height: 100px;
+      max-height: 45vh; overflow-y: auto;
+    }
+    .tools-result h4 {
+      font-size: 12px; color: var(--accent-cyan); text-transform: uppercase;
+      letter-spacing: 0.08em; margin-bottom: 10px;
+    }
+    .tools-result-table {
+      width: 100%; border-collapse: collapse; font-family: var(--font-mono);
+      font-size: 12px;
+    }
+    .tools-result-table th {
+      text-align: left; padding: 6px 10px; background: var(--bg-tertiary);
+      color: var(--text-secondary); font-size: 10px; text-transform: uppercase;
+      letter-spacing: 0.05em; border-bottom: 1px solid var(--border-subtle);
+    }
+    .tools-result-table td {
+      padding: 5px 10px; border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+    }
+    .tools-result-table tr:hover td { background: var(--bg-tertiary); }
+
+    .tools-summary {
+      margin-top: 12px; padding: 10px 14px; background: rgba(6,214,160,0.08);
+      border: 1px solid rgba(6,214,160,0.2); border-radius: var(--radius-sm);
+      font-size: 12px; color: var(--accent-cyan);
+    }
+    .tools-error {
+      padding: 10px 14px; background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.25); border-radius: var(--radius-sm);
+      font-size: 12px; color: var(--color-reject);
+    }
+    .btn-load-result {
+      margin-top: 12px;
+      background: linear-gradient(135deg, var(--accent-purple), #5a3fd4);
+      border-color: var(--accent-purple); color: #fff; font-weight: 600;
+    }
+    .btn-load-result:hover { box-shadow: 0 0 15px rgba(123,97,255,0.3); transform: translateY(-1px); }
   </style>
 </head>
 <body>
@@ -400,7 +514,10 @@
   <!-- HEADER -->
   <header id="header-bar">
     <h1><span class="logo-icon">λ</span> Automata Theory Simulator</h1>
-    <span class="header-meta">DFA · NFA · PDA · TM</span>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span class="header-meta">DFA · NFA · PDA · TM</span>
+      <button class="btn-tools" id="btn-open-tools" type="button">🔧 Araçlar</button>
+    </div>
   </header>
 
   <!-- INPUT PANEL (Left) -->
@@ -555,6 +672,48 @@
       </div>
     </div>
   </section>
+</div>
+
+<!-- TOOLS MODAL -->
+<div id="tools-modal-overlay">
+  <div class="tools-modal">
+    <div class="tools-modal-header">
+      <h2>🔧 Dönüşüm Araçları</h2>
+      <button class="tools-modal-close" id="tools-modal-close">✕</button>
+    </div>
+    <div class="tools-tabs">
+      <button class="tools-tab active" data-tab="nfa2dfa">NFA → DFA</button>
+      <button class="tools-tab" data-tab="minimize">DFA Minimizasyon</button>
+      <button class="tools-tab" data-tab="regex">Regex → NFA</button>
+    </div>
+    <div class="tools-body">
+      <!-- NFA → DFA -->
+      <div class="tools-panel active" id="panel-nfa2dfa">
+        <div class="tools-desc">Mevcut NFA makinesini <strong>alt küme yapılandırması (subset construction)</strong> ile eşdeğer bir DFA'ya dönüştürür. Önce sol panelden bir NFA yükleyin.</div>
+        <div class="tools-action-bar">
+          <button class="btn btn-primary" id="btn-convert-nfa">Dönüştür → DFA</button>
+        </div>
+        <div class="tools-result" id="result-nfa2dfa"><span style="color:var(--text-tertiary)">Sonuç burada gösterilecek...</span></div>
+      </div>
+      <!-- DFA Minimization -->
+      <div class="tools-panel" id="panel-minimize">
+        <div class="tools-desc"><strong>Tablo doldurma algoritması</strong> ile mevcut DFA'daki eşdeğer durumları birleştirerek minimum durumlu eşdeğer DFA üretir. Önce sol panelden bir DFA yükleyin.</div>
+        <div class="tools-action-bar">
+          <button class="btn btn-primary" id="btn-minimize-dfa">Minimize Et</button>
+        </div>
+        <div class="tools-result" id="result-minimize"><span style="color:var(--text-tertiary)">Sonuç burada gösterilecek...</span></div>
+      </div>
+      <!-- Regex → NFA -->
+      <div class="tools-panel" id="panel-regex">
+        <div class="tools-desc"><strong>Thompson yapılandırması</strong> ile düzenli ifadeyi (regex) NFA'ya dönüştürür. Desteklenen operatörler: <code>ab</code> (birleştirme), <code>a|b</code> (veya), <code>a*</code> (Kleene yıldızı), <code>a+</code> (bir veya daha fazla), <code>a?</code> (isteğe bağlı), <code>()</code> (gruplama).</div>
+        <div class="tools-action-bar">
+          <input type="text" id="input-regex" placeholder="Örn: (a|b)*abb">
+          <button class="btn btn-primary" id="btn-regex-to-nfa">NFA Oluştur</button>
+        </div>
+        <div class="tools-result" id="result-regex"><span style="color:var(--text-tertiary)">Sonuç burada gösterilecek...</span></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1282,6 +1441,320 @@ function setStatus(status) {
     rejected: '✗ String REJECTED'
   };
   statusBanner.textContent = labels[status] || status;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CONVERSION TOOLS — NFA→DFA, DFA Minimization, Regex→NFA
+// ═══════════════════════════════════════════════════════════════
+
+/** Compute epsilon closure for a set of states */
+function computeEpsClosure(startStates, transitions) {
+  const closure = new Set(startStates);
+  const stack = [...startStates];
+  while (stack.length > 0) {
+    const s = stack.pop();
+    for (const t of transitions) {
+      if (t.state === s && (t.input === 'ε' || t.input === 'Λ') && !closure.has(t.next)) {
+        closure.add(t.next);
+        stack.push(t.next);
+      }
+    }
+  }
+  return closure;
+}
+
+function stateSetKey(set) {
+  return '{' + [...set].sort().join(',') + '}';
+}
+
+/** NFA → DFA via subset construction */
+function convertNfaToDfa(m) {
+  const alphabet = m.alphabet.filter(a => a !== 'ε' && a !== 'Λ');
+  const startClosure = computeEpsClosure([m.startState], m.transitions);
+  const startKey = stateSetKey(startClosure);
+
+  const dfaStatesMap = new Map(); // key → Set
+  dfaStatesMap.set(startKey, startClosure);
+  const queue = [startClosure];
+  const dfaTransitions = [];
+  const steps = [];
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    const currentKey = stateSetKey(current);
+
+    for (const sym of alphabet) {
+      const moveSet = new Set();
+      for (const s of current) {
+        for (const t of m.transitions) {
+          if (t.state === s && t.input === sym) moveSet.add(t.next);
+        }
+      }
+      if (moveSet.size === 0) continue;
+
+      const closureSet = computeEpsClosure([...moveSet], m.transitions);
+      const closureKey = stateSetKey(closureSet);
+
+      if (!dfaStatesMap.has(closureKey)) {
+        dfaStatesMap.set(closureKey, closureSet);
+        queue.push(closureSet);
+      }
+      dfaTransitions.push({ state: currentKey, input: sym, next: closureKey });
+      steps.push({ from: currentKey, symbol: sym, moveTo: stateSetKey(moveSet), closure: closureKey });
+    }
+  }
+
+  // Rename states D0, D1, ...
+  const nameMap = new Map();
+  let idx = 0;
+  for (const key of dfaStatesMap.keys()) nameMap.set(key, `D${idx++}`);
+
+  const dfaAccept = [];
+  for (const [key, stateSet] of dfaStatesMap) {
+    for (const s of stateSet) {
+      if (m.acceptStates.includes(s)) { dfaAccept.push(nameMap.get(key)); break; }
+    }
+  }
+
+  return {
+    machine: {
+      type: 'DFA',
+      states: [...nameMap.values()],
+      alphabet: alphabet,
+      gamma: [],
+      startState: nameMap.get(startKey),
+      acceptStates: dfaAccept,
+      transitions: dfaTransitions.map(t => ({ state: nameMap.get(t.state), input: t.input, next: nameMap.get(t.next) })),
+      testString: m.testString || ''
+    },
+    steps,
+    nameMap,
+    dfaStatesMap
+  };
+}
+
+/** DFA Minimization via table-filling */
+function minimizeDfa(m) {
+  // Step 1: remove unreachable states
+  const reachable = new Set();
+  const rQueue = [m.startState];
+  reachable.add(m.startState);
+  while (rQueue.length > 0) {
+    const s = rQueue.shift();
+    for (const t of m.transitions) {
+      if (t.state === s && !reachable.has(t.next)) {
+        reachable.add(t.next);
+        rQueue.push(t.next);
+      }
+    }
+  }
+  const rStates = m.states.filter(s => reachable.has(s));
+  const removedStates = m.states.filter(s => !reachable.has(s));
+  const rTrans = m.transitions.filter(t => reachable.has(t.state));
+
+  // Step 2: table-filling
+  const n = rStates.length;
+  const dist = Array.from({length: n}, () => Array(n).fill(false));
+
+  // Mark accept vs non-accept
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      if (m.acceptStates.includes(rStates[i]) !== m.acceptStates.includes(rStates[j])) {
+        dist[i][j] = dist[j][i] = true;
+      }
+    }
+  }
+
+  // Iterate
+  const getTgt = (st, sym) => { const t = rTrans.find(x => x.state === st && x.input === sym); return t ? t.next : null; };
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        if (dist[i][j]) continue;
+        for (const sym of m.alphabet) {
+          const ti = getTgt(rStates[i], sym), tj = getTgt(rStates[j], sym);
+          if (ti === tj) continue;
+          if (!ti || !tj) { dist[i][j] = dist[j][i] = true; changed = true; break; }
+          const ni = rStates.indexOf(ti), nj = rStates.indexOf(tj);
+          if (ni !== nj && dist[ni][nj]) { dist[i][j] = dist[j][i] = true; changed = true; break; }
+        }
+      }
+    }
+  }
+
+  // Group equivalent states
+  const groups = [];
+  const assigned = new Set();
+  for (let i = 0; i < n; i++) {
+    if (assigned.has(i)) continue;
+    const group = [rStates[i]];
+    assigned.add(i);
+    for (let j = i + 1; j < n; j++) {
+      if (!assigned.has(j) && !dist[i][j]) { group.push(rStates[j]); assigned.add(j); }
+    }
+    groups.push(group);
+  }
+
+  const gNames = groups.map((_, i) => `M${i}`);
+  const findG = s => groups.findIndex(g => g.includes(s));
+
+  const minTrans = [];
+  const seen = new Set();
+  for (const t of rTrans) {
+    const fg = findG(t.state), tg = findG(t.next);
+    if (fg < 0 || tg < 0) continue;
+    const key = `${fg}-${t.input}-${tg}`;
+    if (!seen.has(key)) { seen.add(key); minTrans.push({ state: gNames[fg], input: t.input, next: gNames[tg] }); }
+  }
+
+  return {
+    machine: {
+      type: 'DFA',
+      states: gNames,
+      alphabet: m.alphabet,
+      gamma: [],
+      startState: gNames[findG(m.startState)],
+      acceptStates: [...new Set(m.acceptStates.filter(s => reachable.has(s)).map(s => gNames[findG(s)]))],
+      transitions: minTrans,
+      testString: m.testString || ''
+    },
+    groups, gNames, removedStates,
+    originalCount: m.states.length,
+    minimizedCount: gNames.length
+  };
+}
+
+/** Regex → NFA via Thompson's construction */
+function regexToNfa(regex) {
+  let counter = 0;
+  const ns = () => `s${counter++}`;
+
+  // Tokenize
+  function tokenize(str) {
+    const toks = [];
+    let i = 0;
+    while (i < str.length) {
+      const c = str[i];
+      if ('()|*+?'.includes(c)) { toks.push({type: c}); i++; }
+      else if (c === '\\' && i + 1 < str.length) { toks.push({type:'char', value:str[i+1]}); i+=2; }
+      else { toks.push({type:'char', value:c}); i++; }
+    }
+    return toks;
+  }
+
+  let tokens, pos;
+
+  function parseExpr() {
+    let left = parseConcat();
+    while (pos < tokens.length && tokens[pos].type === '|') { pos++; left = {type:'union', left, right:parseConcat()}; }
+    return left;
+  }
+  function parseConcat() {
+    let left = parseUnary();
+    if (!left) return left;
+    while (pos < tokens.length && tokens[pos].type !== ')' && tokens[pos].type !== '|') {
+      const right = parseUnary();
+      if (!right) break;
+      left = {type:'concat', left, right};
+    }
+    return left;
+  }
+  function parseUnary() {
+    let node = parseAtom();
+    if (!node) return node;
+    while (pos < tokens.length && '*+?'.includes(tokens[pos].type)) {
+      node = {type: tokens[pos].type, child: node}; pos++;
+    }
+    return node;
+  }
+  function parseAtom() {
+    if (pos >= tokens.length) return null;
+    const tok = tokens[pos];
+    if (tok.type === '(') { pos++; const n = parseExpr(); if (pos < tokens.length && tokens[pos].type === ')') pos++; return n; }
+    if (tok.type === 'char') { pos++; return {type:'char', value:tok.value}; }
+    return null;
+  }
+
+  // Thompson build
+  function build(ast) {
+    if (!ast) { const s = ns(), e = ns(); return {start:s, accept:e, trans:[{state:s,input:'ε',next:e}]}; }
+    switch(ast.type) {
+      case 'char': { const s=ns(),e=ns(); return {start:s,accept:e,trans:[{state:s,input:ast.value,next:e}]}; }
+      case 'concat': { const l=build(ast.left),r=build(ast.right); return {start:l.start,accept:r.accept,trans:[...l.trans,{state:l.accept,input:'ε',next:r.start},...r.trans]}; }
+      case 'union': {
+        const s=ns(),e=ns(),l=build(ast.left),r=build(ast.right);
+        return {start:s,accept:e,trans:[{state:s,input:'ε',next:l.start},{state:s,input:'ε',next:r.start},...l.trans,...r.trans,{state:l.accept,input:'ε',next:e},{state:r.accept,input:'ε',next:e}]};
+      }
+      case '*': {
+        const s=ns(),e=ns(),inner=build(ast.child);
+        return {start:s,accept:e,trans:[{state:s,input:'ε',next:inner.start},{state:s,input:'ε',next:e},...inner.trans,{state:inner.accept,input:'ε',next:inner.start},{state:inner.accept,input:'ε',next:e}]};
+      }
+      case '+': {
+        const s=ns(),e=ns(),inner=build(ast.child);
+        return {start:s,accept:e,trans:[{state:s,input:'ε',next:inner.start},...inner.trans,{state:inner.accept,input:'ε',next:inner.start},{state:inner.accept,input:'ε',next:e}]};
+      }
+      case '?': {
+        const s=ns(),e=ns(),inner=build(ast.child);
+        return {start:s,accept:e,trans:[{state:s,input:'ε',next:inner.start},{state:s,input:'ε',next:e},...inner.trans,{state:inner.accept,input:'ε',next:e}]};
+      }
+    }
+  }
+
+  tokens = tokenize(regex);
+  pos = 0;
+  const ast = parseExpr();
+  const nfa = build(ast);
+
+  const allStates = new Set();
+  const alphaSet = new Set();
+  for (const t of nfa.trans) { allStates.add(t.state); allStates.add(t.next); if (t.input !== 'ε') alphaSet.add(t.input); }
+
+  return {
+    type: 'NFA',
+    states: [...allStates].sort((a,b) => {
+      const na = parseInt(a.slice(1)), nb = parseInt(b.slice(1));
+      return na - nb;
+    }),
+    alphabet: [...alphaSet].sort(),
+    gamma: [],
+    startState: nfa.start,
+    acceptStates: [nfa.accept],
+    transitions: nfa.trans,
+    testString: ''
+  };
+}
+
+/** Load a converted machine into the UI */
+function loadConvertedMachine(cm) {
+  machineTypeSelect.value = cm.type;
+  onMachineTypeChange();
+  inputStates.value = cm.states.join(', ');
+  inputAlphabet.value = cm.alphabet.join(', ');
+  inputGamma.value = cm.gamma ? cm.gamma.join(', ') : '';
+  inputStart.value = cm.startState;
+  inputAccept.value = cm.acceptStates.join(', ');
+  inputString.value = cm.testString || '';
+
+  transitionsContainer.innerHTML = '';
+  for (const t of cm.transitions) {
+    addTransitionRow();
+    const row = transitionsContainer.lastElementChild;
+    row.querySelector('.tr-state').value = t.state;
+    row.querySelector('.tr-input').value = t.input;
+    row.querySelector('.tr-next').value = t.next;
+    if (cm.type === 'PDA') {
+      row.querySelector('.tr-pop').value = t.pop || '';
+      row.querySelector('.tr-push').value = t.push || '';
+    }
+    if (cm.type === 'TM') {
+      row.querySelector('.tr-write').value = t.write || '';
+      row.querySelector('.tr-dir').value = t.dir || '';
+    }
+  }
+  // Auto-load
+  btnLoadMachine.click();
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -3491,6 +3964,132 @@ function resetSimulation() {
   btnStep.disabled = !machine; btnAuto.disabled = !machine; btnRun.disabled = !machine;
   if (machine) { highlightStates([]); statusBanner.textContent = `${machine.type} ready — Enter string`; }
 }
+
+// ═══════════════════════════════════════════════════════════════
+// TOOLS MODAL UI
+// ═══════════════════════════════════════════════════════════════
+const toolsOverlay = $('tools-modal-overlay');
+const btnOpenTools = $('btn-open-tools');
+const toolsClose = $('tools-modal-close');
+
+btnOpenTools.addEventListener('click', () => toolsOverlay.classList.add('visible'));
+toolsClose.addEventListener('click', () => toolsOverlay.classList.remove('visible'));
+toolsOverlay.addEventListener('click', e => { if (e.target === toolsOverlay) toolsOverlay.classList.remove('visible'); });
+
+// Tab switching
+document.querySelectorAll('.tools-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tools-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tools-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    $('panel-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+// ── NFA → DFA ──
+$('btn-convert-nfa').addEventListener('click', () => {
+  const resEl = $('result-nfa2dfa');
+  if (!machine || machine.type !== 'NFA') {
+    resEl.innerHTML = '<div class="tools-error">⚠ Önce sol panelden bir NFA yükleyin ve "Load Machine" butonuna basın.</div>';
+    return;
+  }
+  try {
+    const result = convertNfaToDfa(machine);
+    let html = '<h4>Alt Küme Yapılandırma Tablosu</h4>';
+    html += '<table class="tools-result-table"><thead><tr><th>DFA Durumu</th><th>NFA Küme</th>';
+    result.machine.alphabet.forEach(a => html += `<th>δ(_, ${a})</th>`);
+    html += '<th>Kabul?</th></tr></thead><tbody>';
+
+    for (const [key, stateSet] of result.dfaStatesMap) {
+      const dName = result.nameMap.get(key);
+      html += `<tr><td><strong>${dName}</strong></td><td>${key}</td>`;
+      for (const sym of result.machine.alphabet) {
+        const tr = result.machine.transitions.find(t => t.state === dName && t.input === sym);
+        html += `<td>${tr ? tr.next : '—'}</td>`;
+      }
+      const isAcc = result.machine.acceptStates.includes(dName);
+      html += `<td>${isAcc ? '✓' : ''}</td></tr>`;
+    }
+    html += '</tbody></table>';
+    html += `<div class="tools-summary">✓ ${machine.states.length} NFA durumu → <strong>${result.machine.states.length} DFA durumu</strong>na dönüştürüldü. Alfabe: {${result.machine.alphabet.join(', ')}}</div>`;
+    html += '<button class="btn btn-load-result" id="btn-load-nfa2dfa">↓ Sonucu Simülatöre Yükle</button>';
+    resEl.innerHTML = html;
+    $('btn-load-nfa2dfa').addEventListener('click', () => {
+      loadConvertedMachine(result.machine);
+      toolsOverlay.classList.remove('visible');
+    });
+  } catch (err) {
+    resEl.innerHTML = `<div class="tools-error">Hata: ${err.message}</div>`;
+  }
+});
+
+// ── DFA Minimization ──
+$('btn-minimize-dfa').addEventListener('click', () => {
+  const resEl = $('result-minimize');
+  if (!machine || machine.type !== 'DFA') {
+    resEl.innerHTML = '<div class="tools-error">⚠ Önce sol panelden bir DFA yükleyin ve "Load Machine" butonuna basın.</div>';
+    return;
+  }
+  try {
+    const result = minimizeDfa(machine);
+    let html = '<h4>Minimizasyon Sonucu</h4>';
+    if (result.removedStates.length > 0) {
+      html += `<div class="tools-error" style="margin-bottom:10px;">Ulaşılamaz durumlar silindi: {${result.removedStates.join(', ')}}</div>`;
+    }
+    html += '<table class="tools-result-table"><thead><tr><th>Min Durum</th><th>Birleşen Orijinal Durumlar</th>';
+    result.machine.alphabet.forEach(a => html += `<th>δ(_, ${a})</th>`);
+    html += '<th>Kabul?</th></tr></thead><tbody>';
+
+    result.groups.forEach((group, i) => {
+      const gn = result.gNames[i];
+      html += `<tr><td><strong>${gn}</strong></td><td>{${group.join(', ')}}</td>`;
+      for (const sym of result.machine.alphabet) {
+        const tr = result.machine.transitions.find(t => t.state === gn && t.input === sym);
+        html += `<td>${tr ? tr.next : '—'}</td>`;
+      }
+      const isAcc = result.machine.acceptStates.includes(gn);
+      html += `<td>${isAcc ? '✓' : ''}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    html += `<div class="tools-summary">✓ ${result.originalCount} durum → <strong>${result.minimizedCount} durum</strong>a minimize edildi.</div>`;
+    html += '<button class="btn btn-load-result" id="btn-load-min">↓ Sonucu Simülatöre Yükle</button>';
+    resEl.innerHTML = html;
+    $('btn-load-min').addEventListener('click', () => {
+      loadConvertedMachine(result.machine);
+      toolsOverlay.classList.remove('visible');
+    });
+  } catch (err) {
+    resEl.innerHTML = `<div class="tools-error">Hata: ${err.message}</div>`;
+  }
+});
+
+// ── Regex → NFA ──
+$('btn-regex-to-nfa').addEventListener('click', () => {
+  const resEl = $('result-regex');
+  const regex = $('input-regex').value.trim();
+  if (!regex) {
+    resEl.innerHTML = '<div class="tools-error">⚠ Lütfen bir düzenli ifade girin.</div>';
+    return;
+  }
+  try {
+    const nfaMachine = regexToNfa(regex);
+    let html = `<h4>Thompson NFA — /${regex}/</h4>`;
+    html += '<table class="tools-result-table"><thead><tr><th>Durum</th><th>Giriş</th><th>Sonraki</th></tr></thead><tbody>';
+    for (const t of nfaMachine.transitions) {
+      html += `<tr><td>${t.state}</td><td>${t.input}</td><td>${t.next}</td></tr>`;
+    }
+    html += '</tbody></table>';
+    html += `<div class="tools-summary">✓ ${nfaMachine.states.length} durum, ${nfaMachine.transitions.length} geçiş oluşturuldu.<br>Alfabe: {${nfaMachine.alphabet.join(', ')}}, Başlangıç: ${nfaMachine.startState}, Kabul: {${nfaMachine.acceptStates.join(', ')}}</div>`;
+    html += '<button class="btn btn-load-result" id="btn-load-regex">↓ Sonucu Simülatöre Yükle</button>';
+    resEl.innerHTML = html;
+    $('btn-load-regex').addEventListener('click', () => {
+      loadConvertedMachine(nfaMachine);
+      toolsOverlay.classList.remove('visible');
+    });
+  } catch (err) {
+    resEl.innerHTML = `<div class="tools-error">Regex parse hatası: ${err.message}</div>`;
+  }
+});
 
 // ═══════════════════════════════════════════════════════════════
 // INIT
