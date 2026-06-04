@@ -442,6 +442,11 @@
         <optgroup label="TM — İleri Düzey 🚨">
           <option value="tm-subtract">TM: Çıkarma (n−m)</option>
           <option value="tm-copy">TM: Katar Kopyalama</option>
+          <option value="tm-reverse-concat">TM: Tersini Birleştir</option>
+          <option value="tm-reverse-inplace">TM: Tersine Çevirme</option>
+          <option value="tm-shift-delete">TM: Kaydırma ve Silme</option>
+          <option value="tm-odd-even-transform">TM: Tek/Çift Dönüşümü</option>
+          <option value="tm-substring">TM: Alt Katar Arama</option>
         </optgroup>
       </select>
     </div>
@@ -2388,7 +2393,7 @@ const PRESETS = {
       {
         "state": "q_carry_a_to_left",
         "input": "b",
-        "next": "q_carry_b_to_left",
+        "next": "q_carry_a_to_left",
         "write": "b",
         "dir": "L"
       },
@@ -2402,7 +2407,7 @@ const PRESETS = {
       {
         "state": "q_carry_a_to_left",
         "input": "B",
-        "next": "q_carry_b_to_left",
+        "next": "q_carry_a_to_left",
         "write": "B",
         "dir": "L"
       },
