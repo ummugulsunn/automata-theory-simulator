@@ -540,6 +540,9 @@
           <option value="nfa-epsilon">NFA: ε-geçişli örnek</option>
           <option value="nfa-ends-00-or-11">NFA: Sonu 00 veya 11 📋</option>
           <option value="nfa-abstar-union">NFA: ab*a ∪ ba*b (Dönüşüm Pratiği) ⭐</option>
+          <option value="nfa-first-eq-last">NFA: İlk=Son Harf (0(0∪1)*0 ∪ ...) ⭐</option>
+          <option value="nfa-contains-abb">NFA: İçinde "abb" Geçen ⭐</option>
+          <option value="nfa-ba-start-aab-end">NFA: "ba" ile başla, "aab" ile bit ⭐</option>
         </optgroup>
         <optgroup label="PDA — Temel">
           <option value="pda-anbn">PDA: aⁿbⁿ (Eşitlik)</option>
@@ -4103,6 +4106,68 @@ const PRESETS = {
       {"state": "q5", "input": "b", "next": "q6"}
     ],
     "testString": "abba"
+  },
+
+  // ═══ KIYIDA KALAN FSM SPESIFİK ÖRNEKLER ═══
+
+  "nfa-first-eq-last": {
+    "type": "NFA",
+    "states": "q0, q1, q2, q3, q4, q5, q6",
+    "alphabet": "0, 1",
+    "start": "q0",
+    "accept": "q3, q6",
+    "transitions": [
+      {"state": "q0", "input": "ε", "next": "q1"},
+      {"state": "q0", "input": "ε", "next": "q4"},
+      {"state": "q1", "input": "0", "next": "q2"},
+      {"state": "q1", "input": "0", "next": "q3"},
+      {"state": "q2", "input": "0", "next": "q2"},
+      {"state": "q2", "input": "1", "next": "q2"},
+      {"state": "q2", "input": "0", "next": "q3"},
+      {"state": "q4", "input": "1", "next": "q5"},
+      {"state": "q4", "input": "1", "next": "q6"},
+      {"state": "q5", "input": "0", "next": "q5"},
+      {"state": "q5", "input": "1", "next": "q5"},
+      {"state": "q5", "input": "1", "next": "q6"}
+    ],
+    "testString": "01010"
+  },
+
+  "nfa-contains-abb": {
+    "type": "NFA",
+    "states": "q0, q1, q2, q3",
+    "alphabet": "a, b",
+    "start": "q0",
+    "accept": "q3",
+    "transitions": [
+      {"state": "q0", "input": "a", "next": "q0"},
+      {"state": "q0", "input": "b", "next": "q0"},
+      {"state": "q0", "input": "a", "next": "q1"},
+      {"state": "q1", "input": "b", "next": "q2"},
+      {"state": "q2", "input": "b", "next": "q3"},
+      {"state": "q3", "input": "a", "next": "q3"},
+      {"state": "q3", "input": "b", "next": "q3"}
+    ],
+    "testString": "aabb"
+  },
+
+  "nfa-ba-start-aab-end": {
+    "type": "NFA",
+    "states": "q0, q1, q2, q3, q4, qf",
+    "alphabet": "a, b",
+    "start": "q0",
+    "accept": "qf",
+    "transitions": [
+      {"state": "q0", "input": "b", "next": "q1"},
+      {"state": "q1", "input": "a", "next": "q2"},
+      {"state": "q1", "input": "a", "next": "q3"},
+      {"state": "q2", "input": "a", "next": "q2"},
+      {"state": "q2", "input": "b", "next": "q2"},
+      {"state": "q2", "input": "a", "next": "q3"},
+      {"state": "q3", "input": "a", "next": "q4"},
+      {"state": "q4", "input": "b", "next": "qf"}
+    ],
+    "testString": "baaab"
   }
 };
 
