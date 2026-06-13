@@ -536,6 +536,7 @@
         <optgroup label="NFA (Belirli Olmayan)">
           <option value="nfa-ends-ab">NFA: "ab" ile biten</option>
           <option value="nfa-epsilon">NFA: ε-geçişli örnek</option>
+          <option value="nfa-ends-00-or-11">NFA: Sonu 00 veya 11 📋</option>
         </optgroup>
         <optgroup label="PDA — Temel">
           <option value="pda-anbn">PDA: aⁿbⁿ (Eşitlik)</option>
@@ -550,6 +551,7 @@
           <option value="pda-multi-sep">PDA: Çoklu Ayırıcı (aa w bb wR cc)</option>
           <option value="pda-na-lt-nb">PDA: nₐ < n_b (Eşitsizlik)</option>
           <option value="pda-range">PDA: aⁿbᵐ (n≤m≤2n)</option>
+          <option value="pda-nested-abcd-ee">PDA: aⁿbᵏcᵏdⁿee (İçiçe Eşleştirme) 📋</option>
         </optgroup>
         <optgroup label="TM — Temel">
           <option value="tm-anbn">TM: aⁿbⁿ (İşaretleme)</option>
@@ -564,6 +566,8 @@
           <option value="tm-shift-delete">TM: Kaydırma ve Silme</option>
           <option value="tm-odd-even-transform">TM: Tek/Çift Dönüşümü</option>
           <option value="tm-substring">TM: Alt Katar Arama</option>
+          <option value="tm-replace-c-to-d">TM: c→d Harf Dönüştürme 📋</option>
+          <option value="tm-count-even-zeros">TM: 0-Sayısı Çift/Tek 📋</option>
         </optgroup>
       </select>
     </div>
@@ -3877,6 +3881,92 @@ const PRESETS = {
       }
     ],
     "testString": "#aab#"
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // 📋 5 HAZİRAN FİNAL PROVASI — Hocanın Tahtada Çözdüğü Sorular
+  // ═══════════════════════════════════════════════════════════════
+
+  "tm-replace-c-to-d": {
+    "type": "TM",
+    "states": "q0, q1, q_back, qf",
+    "alphabet": "a, b, c, #",
+    "gamma": "a, b, c, d, #, B",
+    "start": "q0",
+    "accept": "qf",
+    "transitions": [
+      {"state": "q0", "input": "#", "next": "q1", "write": "#", "dir": "R"},
+      {"state": "q1", "input": "a", "next": "q1", "write": "a", "dir": "R"},
+      {"state": "q1", "input": "b", "next": "q1", "write": "b", "dir": "R"},
+      {"state": "q1", "input": "c", "next": "q1", "write": "d", "dir": "R"},
+      {"state": "q1", "input": "d", "next": "q1", "write": "d", "dir": "R"},
+      {"state": "q1", "input": "#", "next": "q_back", "write": "#", "dir": "L"},
+      {"state": "q_back", "input": "a", "next": "q_back", "write": "a", "dir": "L"},
+      {"state": "q_back", "input": "b", "next": "q_back", "write": "b", "dir": "L"},
+      {"state": "q_back", "input": "d", "next": "q_back", "write": "d", "dir": "L"},
+      {"state": "q_back", "input": "#", "next": "qf", "write": "#", "dir": "S"},
+      {"state": "q1", "input": "B", "next": "qf", "write": "B", "dir": "S"}
+    ],
+    "testString": "#acbca#"
+  },
+
+  "tm-count-even-zeros": {
+    "type": "TM",
+    "states": "q_even, q_odd, q_acc, q_rej",
+    "alphabet": "0, 1",
+    "gamma": "0, 1, B",
+    "start": "q_even",
+    "accept": "q_acc",
+    "transitions": [
+      {"state": "q_even", "input": "0", "next": "q_odd", "write": "0", "dir": "R"},
+      {"state": "q_even", "input": "1", "next": "q_even", "write": "1", "dir": "R"},
+      {"state": "q_even", "input": "B", "next": "q_acc", "write": "B", "dir": "S"},
+      {"state": "q_odd", "input": "0", "next": "q_even", "write": "0", "dir": "R"},
+      {"state": "q_odd", "input": "1", "next": "q_odd", "write": "1", "dir": "R"},
+      {"state": "q_odd", "input": "B", "next": "q_rej", "write": "B", "dir": "S"}
+    ],
+    "testString": "1010"
+  },
+
+  "pda-nested-abcd-ee": {
+    "type": "PDA",
+    "states": "q0, q_a, q_b, q_c, q_d, q_e1, q_e2, qf",
+    "alphabet": "a, b, c, d, e",
+    "gamma": "a, b, $",
+    "start": "q0",
+    "accept": "qf",
+    "transitions": [
+      {"state": "q0", "input": "ε", "pop": "ε", "next": "q_a", "push": "$"},
+      {"state": "q_a", "input": "a", "pop": "ε", "next": "q_a", "push": "a"},
+      {"state": "q_a", "input": "b", "pop": "ε", "next": "q_b", "push": "b"},
+      {"state": "q_b", "input": "b", "pop": "ε", "next": "q_b", "push": "b"},
+      {"state": "q_b", "input": "c", "pop": "b", "next": "q_c", "push": "ε"},
+      {"state": "q_c", "input": "c", "pop": "b", "next": "q_c", "push": "ε"},
+      {"state": "q_c", "input": "d", "pop": "a", "next": "q_d", "push": "ε"},
+      {"state": "q_d", "input": "d", "pop": "a", "next": "q_d", "push": "ε"},
+      {"state": "q_d", "input": "e", "pop": "$", "next": "q_e1", "push": "ε"},
+      {"state": "q_e1", "input": "e", "pop": "ε", "next": "qf", "push": "ε"}
+    ],
+    "testString": "aabbccddee"
+  },
+
+  "nfa-ends-00-or-11": {
+    "type": "NFA",
+    "states": "q0, q1, q2, q3, q4, qf",
+    "alphabet": "0, 1",
+    "start": "q0",
+    "accept": "qf",
+    "transitions": [
+      {"state": "q0", "input": "0", "next": "q0"},
+      {"state": "q0", "input": "1", "next": "q0"},
+      {"state": "q0", "input": "ε", "next": "q1"},
+      {"state": "q0", "input": "ε", "next": "q3"},
+      {"state": "q1", "input": "0", "next": "q2"},
+      {"state": "q2", "input": "0", "next": "qf"},
+      {"state": "q3", "input": "1", "next": "q4"},
+      {"state": "q4", "input": "1", "next": "qf"}
+    ],
+    "testString": "10100"
   }
 };
 
