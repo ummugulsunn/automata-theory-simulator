@@ -532,11 +532,14 @@
         <optgroup label="DFA (Sonlu Otomat)">
           <option value="dfa-even-zeros">DFA: Çift sayıda 0</option>
           <option value="dfa-ends-01">DFA: "01" ile biten</option>
+          <option value="dfa-0star-1star">DFA: 0*1* (İçinde "10" yok) ⭐</option>
+          <option value="dfa-single-one">DFA: 0*10* (Sadece bir 1) ⭐</option>
         </optgroup>
         <optgroup label="NFA (Belirli Olmayan)">
           <option value="nfa-ends-ab">NFA: "ab" ile biten</option>
           <option value="nfa-epsilon">NFA: ε-geçişli örnek</option>
           <option value="nfa-ends-00-or-11">NFA: Sonu 00 veya 11 📋</option>
+          <option value="nfa-abstar-union">NFA: ab*a ∪ ba*b (Dönüşüm Pratiği) ⭐</option>
         </optgroup>
         <optgroup label="PDA — Temel">
           <option value="pda-anbn">PDA: aⁿbⁿ (Eşitlik)</option>
@@ -552,6 +555,7 @@
           <option value="pda-na-lt-nb">PDA: nₐ < n_b (Eşitsizlik)</option>
           <option value="pda-range">PDA: aⁿbᵐ (n≤m≤2n)</option>
           <option value="pda-nested-abcd-ee">PDA: aⁿbᵏcᵏdⁿee (İçiçe Eşleştirme) 📋</option>
+          <option value="pda-combine-match">PDA: aⁱbⁱ⁺jcʲ (Kombine Eşleştirme) ⭐</option>
         </optgroup>
         <optgroup label="TM — Temel">
           <option value="tm-anbn">TM: aⁿbⁿ (İşaretleme)</option>
@@ -568,6 +572,9 @@
           <option value="tm-substring">TM: Alt Katar Arama</option>
           <option value="tm-replace-c-to-d">TM: c→d Harf Dönüştürme 📋</option>
           <option value="tm-count-even-zeros">TM: 0-Sayısı Çift/Tek 📋</option>
+          <option value="tm-swap-ab">TM: a↔b Karşılıklı Dönüştürme ⭐</option>
+          <option value="tm-erase-all">TM: Tamamen Silici ⭐</option>
+          <option value="tm-search-left">TM: Sola # Arama ⭐</option>
         </optgroup>
       </select>
     </div>
@@ -3967,6 +3974,135 @@ const PRESETS = {
       {"state": "q4", "input": "1", "next": "qf"}
     ],
     "testString": "10100"
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // ⭐ KIYIDA KALAN SÜRPRİZ SORULARI
+  // ═══════════════════════════════════════════════════════════════
+
+  "tm-swap-ab": {
+    "type": "TM",
+    "states": "q0, qf",
+    "alphabet": "a, b",
+    "gamma": "a, b, B",
+    "start": "q0",
+    "accept": "qf",
+    "transitions": [
+      {"state": "q0", "input": "a", "next": "q0", "write": "b", "dir": "R"},
+      {"state": "q0", "input": "b", "next": "q0", "write": "a", "dir": "R"},
+      {"state": "q0", "input": "B", "next": "qf", "write": "B", "dir": "S"}
+    ],
+    "testString": "abba"
+  },
+
+  "tm-erase-all": {
+    "type": "TM",
+    "states": "q0, qf",
+    "alphabet": "a, b, c",
+    "gamma": "a, b, c, B",
+    "start": "q0",
+    "accept": "qf",
+    "transitions": [
+      {"state": "q0", "input": "a", "next": "q0", "write": "B", "dir": "R"},
+      {"state": "q0", "input": "b", "next": "q0", "write": "B", "dir": "R"},
+      {"state": "q0", "input": "c", "next": "q0", "write": "B", "dir": "R"},
+      {"state": "q0", "input": "B", "next": "qf", "write": "B", "dir": "S"}
+    ],
+    "testString": "abcba"
+  },
+
+  "tm-search-left": {
+    "type": "TM",
+    "states": "q_right, q_search, qf",
+    "alphabet": "a, #",
+    "gamma": "a, #, B",
+    "start": "q_right",
+    "accept": "qf",
+    "transitions": [
+      {"state": "q_right", "input": "a", "next": "q_right", "write": "a", "dir": "R"},
+      {"state": "q_right", "input": "#", "next": "q_right", "write": "#", "dir": "R"},
+      {"state": "q_right", "input": "B", "next": "q_search", "write": "B", "dir": "L"},
+      {"state": "q_search", "input": "a", "next": "q_search", "write": "a", "dir": "L"},
+      {"state": "q_search", "input": "#", "next": "qf", "write": "#", "dir": "S"}
+    ],
+    "testString": "aa#aaa"
+  },
+
+  "pda-combine-match": {
+    "type": "PDA",
+    "states": "q0, q_a, q_pop, q_push, q_match, qf",
+    "alphabet": "a, b",
+    "gamma": "a, b, $",
+    "start": "q0",
+    "accept": "qf",
+    "transitions": [
+      {"state": "q0", "input": "ε", "pop": "ε", "next": "q_a", "push": "$"},
+      {"state": "q_a", "input": "a", "pop": "ε", "next": "q_a", "push": "a"},
+      {"state": "q_a", "input": "ε", "pop": "$", "next": "qf", "push": "ε"},
+      {"state": "q_a", "input": "b", "pop": "a", "next": "q_pop", "push": "ε"},
+      {"state": "q_a", "input": "b", "pop": "$", "next": "q_push", "push": "$b"},
+      {"state": "q_pop", "input": "b", "pop": "a", "next": "q_pop", "push": "ε"},
+      {"state": "q_pop", "input": "ε", "pop": "$", "next": "qf", "push": "ε"},
+      {"state": "q_pop", "input": "b", "pop": "$", "next": "q_push", "push": "$b"},
+      {"state": "q_push", "input": "b", "pop": "ε", "next": "q_push", "push": "b"},
+      {"state": "q_push", "input": "a", "pop": "b", "next": "q_match", "push": "ε"},
+      {"state": "q_match", "input": "a", "pop": "b", "next": "q_match", "push": "ε"},
+      {"state": "q_match", "input": "ε", "pop": "$", "next": "qf", "push": "ε"}
+    ],
+    "testString": "aabbba"
+  },
+
+  "dfa-0star-1star": {
+    "type": "DFA",
+    "states": "q0, q1, q_dead",
+    "alphabet": "0, 1",
+    "start": "q0",
+    "accept": "q0, q1",
+    "transitions": [
+      {"state": "q0", "input": "0", "next": "q0"},
+      {"state": "q0", "input": "1", "next": "q1"},
+      {"state": "q1", "input": "1", "next": "q1"},
+      {"state": "q1", "input": "0", "next": "q_dead"},
+      {"state": "q_dead", "input": "0", "next": "q_dead"},
+      {"state": "q_dead", "input": "1", "next": "q_dead"}
+    ],
+    "testString": "00011"
+  },
+
+  "dfa-single-one": {
+    "type": "DFA",
+    "states": "q0, q1, q_dead",
+    "alphabet": "0, 1",
+    "start": "q0",
+    "accept": "q1",
+    "transitions": [
+      {"state": "q0", "input": "0", "next": "q0"},
+      {"state": "q0", "input": "1", "next": "q1"},
+      {"state": "q1", "input": "0", "next": "q1"},
+      {"state": "q1", "input": "1", "next": "q_dead"},
+      {"state": "q_dead", "input": "0", "next": "q_dead"},
+      {"state": "q_dead", "input": "1", "next": "q_dead"}
+    ],
+    "testString": "00100"
+  },
+
+  "nfa-abstar-union": {
+    "type": "NFA",
+    "states": "q0, q1, q2, q3, q4, q5, q6",
+    "alphabet": "a, b",
+    "start": "q0",
+    "accept": "q3, q6",
+    "transitions": [
+      {"state": "q0", "input": "ε", "next": "q1"},
+      {"state": "q0", "input": "ε", "next": "q4"},
+      {"state": "q1", "input": "a", "next": "q2"},
+      {"state": "q2", "input": "b", "next": "q2"},
+      {"state": "q2", "input": "a", "next": "q3"},
+      {"state": "q4", "input": "b", "next": "q5"},
+      {"state": "q5", "input": "a", "next": "q5"},
+      {"state": "q5", "input": "b", "next": "q6"}
+    ],
+    "testString": "abba"
   }
 };
 
