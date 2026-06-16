@@ -534,6 +534,11 @@
           <option value="dfa-ends-01">DFA: "01" ile biten</option>
           <option value="dfa-0star-1star">DFA: 0*1* (İçinde "10" yok) ⭐</option>
           <option value="dfa-single-one">DFA: 0*10* (Sadece bir 1) ⭐</option>
+          <option value="dfa-no-101">DFA: "101" İçermeyen (Kuyu) ⭐</option>
+          <option value="dfa-max-3-a">DFA: Max 3 tane 'a' (Kuyu) ⭐</option>
+          <option value="dfa-exactly-one-a">DFA: Sadece 1 tane 'a' ⭐</option>
+          <option value="dfa-at-least-one-a-one-b">DFA: En az bir 'a' VE 'b' ⭐</option>
+          <option value="dfa-length-3">DFA: Sadece 3 Uzunluklu ⭐</option>
         </optgroup>
         <optgroup label="NFA (Belirli Olmayan)">
           <option value="nfa-ends-ab">NFA: "ab" ile biten</option>
@@ -543,6 +548,9 @@
           <option value="nfa-first-eq-last">NFA: İlk=Son Harf (0(0∪1)*0 ∪ ...) ⭐</option>
           <option value="nfa-contains-abb">NFA: İçinde "abb" Geçen ⭐</option>
           <option value="nfa-ba-start-aab-end">NFA: "ba" ile başla, "aab" ile bit ⭐</option>
+          <option value="nfa-ends-b-or-aa">NFA: Sonu "b" veya "aa" ile biten ⭐</option>
+          <option value="nfa-contains-aab">NFA: İçinde "aab" Geçen ⭐</option>
+          <option value="nfa-last-2nd-3rd-1">NFA: Sondan 2. veya 3. Harfi 1 ⭐</option>
         </optgroup>
         <optgroup label="PDA — Temel">
           <option value="pda-anbn">PDA: aⁿbⁿ (Eşitlik)</option>
@@ -559,6 +567,7 @@
           <option value="pda-range">PDA: aⁿbᵐ (n≤m≤2n)</option>
           <option value="pda-nested-abcd-ee">PDA: aⁿbᵏcᵏdⁿee (İçiçe Eşleştirme) 📋</option>
           <option value="pda-combine-match">PDA: aⁱbⁱ⁺jcʲ (Kombine Eşleştirme) ⭐</option>
+          <option value="pda-balanced">PDA: Parantez Dengelemesi ⭐</option>
         </optgroup>
         <optgroup label="TM — Temel">
           <option value="tm-anbn">TM: aⁿbⁿ (İşaretleme)</option>
@@ -578,6 +587,8 @@
           <option value="tm-swap-ab">TM: a↔b Karşılıklı Dönüştürme ⭐</option>
           <option value="tm-erase-all">TM: Tamamen Silici ⭐</option>
           <option value="tm-search-left">TM: Sola # Arama ⭐</option>
+          <option value="tm-reject-aba">TM: "aba" İçermeyen (Kuyu) ⭐</option>
+          <option value="tm-count-a">TM: A'ları Sayıp Ekleme ⭐</option>
         </optgroup>
       </select>
     </div>
@@ -4003,6 +4014,60 @@ const PRESETS = {
     "testString": "aa#aaa"
   },
 
+  "tm-reject-aba": {
+    "type": "TM",
+    "states": "q0, q1, q2, q_reject, q_accept",
+    "alphabet": "a, b",
+    "gamma": "a, b, B",
+    "start": "q0",
+    "accept": "q_accept",
+    "transitions": [
+      {"state": "q0", "input": "a", "next": "q1", "write": "a", "dir": "R"},
+      {"state": "q0", "input": "b", "next": "q0", "write": "b", "dir": "R"},
+      {"state": "q1", "input": "a", "next": "q1", "write": "a", "dir": "R"},
+      {"state": "q1", "input": "b", "next": "q2", "write": "b", "dir": "R"},
+      {"state": "q2", "input": "a", "next": "q_reject", "write": "a", "dir": "S"},
+      {"state": "q2", "input": "b", "next": "q0", "write": "b", "dir": "R"},
+      {"state": "q0", "input": "B", "next": "q_accept", "write": "B", "dir": "S"},
+      {"state": "q1", "input": "B", "next": "q_accept", "write": "B", "dir": "S"},
+      {"state": "q2", "input": "B", "next": "q_accept", "write": "B", "dir": "S"}
+    ],
+    "testString": "bbaab"
+  },
+
+  "tm-count-a": {
+    "type": "TM",
+    "states": "q_scan, q_find_end, q_write_1, q_return, q_cleanup, q_accept",
+    "alphabet": "A, b",
+    "gamma": "A, b, X, 1, B",
+    "start": "q_scan",
+    "accept": "q_accept",
+    "transitions": [
+      {"state": "q_scan", "input": "b", "next": "q_scan", "write": "b", "dir": "R"},
+      {"state": "q_scan", "input": "1", "next": "q_scan", "write": "1", "dir": "R"},
+      {"state": "q_scan", "input": "A", "next": "q_find_end", "write": "X", "dir": "R"},
+      {"state": "q_scan", "input": "B", "next": "q_cleanup", "write": "B", "dir": "L"},
+
+      {"state": "q_find_end", "input": "A", "next": "q_find_end", "write": "A", "dir": "R"},
+      {"state": "q_find_end", "input": "b", "next": "q_find_end", "write": "b", "dir": "R"},
+      {"state": "q_find_end", "input": "1", "next": "q_find_end", "write": "1", "dir": "R"},
+      {"state": "q_find_end", "input": "B", "next": "q_write_1", "write": "1", "dir": "S"},
+
+      {"state": "q_write_1", "input": "1", "next": "q_return", "write": "1", "dir": "L"},
+
+      {"state": "q_return", "input": "A", "next": "q_return", "write": "A", "dir": "L"},
+      {"state": "q_return", "input": "b", "next": "q_return", "write": "b", "dir": "L"},
+      {"state": "q_return", "input": "1", "next": "q_return", "write": "1", "dir": "L"},
+      {"state": "q_return", "input": "X", "next": "q_scan", "write": "X", "dir": "R"},
+
+      {"state": "q_cleanup", "input": "X", "next": "q_cleanup", "write": "A", "dir": "L"},
+      {"state": "q_cleanup", "input": "b", "next": "q_cleanup", "write": "b", "dir": "L"},
+      {"state": "q_cleanup", "input": "1", "next": "q_cleanup", "write": "1", "dir": "L"},
+      {"state": "q_cleanup", "input": "B", "next": "q_accept", "write": "B", "dir": "R"}
+    ],
+    "testString": "bAbAb"
+  },
+
   "pda-combine-match": {
     "type": "PDA",
     "states": "q0, q_a, q_pop, q_push, q_match, qf",
@@ -4025,6 +4090,22 @@ const PRESETS = {
       {"state": "q_match", "input": "ε", "pop": "$", "next": "qf", "push": "ε"}
     ],
     "testString": "aabbba"
+  },
+
+  "pda-balanced": {
+    "type": "PDA",
+    "states": "q0, q1, qf",
+    "alphabet": "(, )",
+    "gamma": "(, Z",
+    "start": "q0",
+    "accept": "qf",
+    "transitions": [
+      {"state": "q0", "input": "ε", "pop": "ε", "next": "q1", "push": "Z"},
+      {"state": "q1", "input": "(", "pop": "ε", "next": "q1", "push": "("},
+      {"state": "q1", "input": ")", "pop": "(", "next": "q1", "push": "ε"},
+      {"state": "q1", "input": "ε", "pop": "Z", "next": "qf", "push": "ε"}
+    ],
+    "testString": "(()(()))"
   },
 
   "dfa-0star-1star": {
@@ -4140,6 +4221,159 @@ const PRESETS = {
       {"state": "q4", "input": "b", "next": "qf"}
     ],
     "testString": "baaab"
+  },
+
+  // ═══ KIYIDA KALAN EKSİK KATEGORİ SORULARI ═══
+
+  "dfa-no-101": {
+    "type": "DFA",
+    "states": "q0, q1, q10, q_dead",
+    "alphabet": "0, 1",
+    "start": "q0",
+    "accept": "q0, q1, q10",
+    "transitions": [
+      {"state": "q0", "input": "0", "next": "q0"},
+      {"state": "q0", "input": "1", "next": "q1"},
+      {"state": "q1", "input": "1", "next": "q1"},
+      {"state": "q1", "input": "0", "next": "q10"},
+      {"state": "q10", "input": "0", "next": "q0"},
+      {"state": "q10", "input": "1", "next": "q_dead"},
+      {"state": "q_dead", "input": "0", "next": "q_dead"},
+      {"state": "q_dead", "input": "1", "next": "q_dead"}
+    ],
+    "testString": "100110"
+  },
+
+  "dfa-max-3-a": {
+    "type": "DFA",
+    "states": "q0, q1, q2, q3, q_dead",
+    "alphabet": "a, b",
+    "start": "q0",
+    "accept": "q0, q1, q2, q3",
+    "transitions": [
+      {"state": "q0", "input": "b", "next": "q0"},
+      {"state": "q0", "input": "a", "next": "q1"},
+      {"state": "q1", "input": "b", "next": "q1"},
+      {"state": "q1", "input": "a", "next": "q2"},
+      {"state": "q2", "input": "b", "next": "q2"},
+      {"state": "q2", "input": "a", "next": "q3"},
+      {"state": "q3", "input": "b", "next": "q3"},
+      {"state": "q3", "input": "a", "next": "q_dead"},
+      {"state": "q_dead", "input": "a", "next": "q_dead"},
+      {"state": "q_dead", "input": "b", "next": "q_dead"}
+    ],
+    "testString": "babaab"
+  },
+
+  "dfa-exactly-one-a": {
+    "type": "DFA",
+    "states": "q0, q1, q_dead",
+    "alphabet": "a, b",
+    "start": "q0",
+    "accept": "q1",
+    "transitions": [
+      {"state": "q0", "input": "b", "next": "q0"},
+      {"state": "q0", "input": "a", "next": "q1"},
+      {"state": "q1", "input": "b", "next": "q1"},
+      {"state": "q1", "input": "a", "next": "q_dead"},
+      {"state": "q_dead", "input": "a", "next": "q_dead"},
+      {"state": "q_dead", "input": "b", "next": "q_dead"}
+    ],
+    "testString": "bbabb"
+  },
+
+  "dfa-at-least-one-a-one-b": {
+    "type": "DFA",
+    "states": "q0, q_a, q_b, q_ab",
+    "alphabet": "a, b",
+    "start": "q0",
+    "accept": "q_ab",
+    "transitions": [
+      {"state": "q0", "input": "a", "next": "q_a"},
+      {"state": "q0", "input": "b", "next": "q_b"},
+      {"state": "q_a", "input": "a", "next": "q_a"},
+      {"state": "q_a", "input": "b", "next": "q_ab"},
+      {"state": "q_b", "input": "b", "next": "q_b"},
+      {"state": "q_b", "input": "a", "next": "q_ab"},
+      {"state": "q_ab", "input": "a", "next": "q_ab"},
+      {"state": "q_ab", "input": "b", "next": "q_ab"}
+    ],
+    "testString": "bbbaa"
+  },
+
+  "dfa-length-3": {
+    "type": "DFA",
+    "states": "q0, q1, q2, q3, q_dead",
+    "alphabet": "a, b",
+    "start": "q0",
+    "accept": "q3",
+    "transitions": [
+      {"state": "q0", "input": "a", "next": "q1"},
+      {"state": "q0", "input": "b", "next": "q1"},
+      {"state": "q1", "input": "a", "next": "q2"},
+      {"state": "q1", "input": "b", "next": "q2"},
+      {"state": "q2", "input": "a", "next": "q3"},
+      {"state": "q2", "input": "b", "next": "q3"},
+      {"state": "q3", "input": "a", "next": "q_dead"},
+      {"state": "q3", "input": "b", "next": "q_dead"},
+      {"state": "q_dead", "input": "a", "next": "q_dead"},
+      {"state": "q_dead", "input": "b", "next": "q_dead"}
+    ],
+    "testString": "aba"
+  },
+
+  "nfa-ends-b-or-aa": {
+    "type": "NFA",
+    "states": "q0, q1, q2, q3, q4",
+    "alphabet": "a, b",
+    "start": "q0",
+    "accept": "q2, q4",
+    "transitions": [
+      {"state": "q0", "input": "a", "next": "q0"},
+      {"state": "q0", "input": "b", "next": "q0"},
+      {"state": "q0", "input": "ε", "next": "q1"},
+      {"state": "q1", "input": "b", "next": "q2"},
+      {"state": "q0", "input": "ε", "next": "q3"},
+      {"state": "q3", "input": "a", "next": "q_mid"},
+      {"state": "q_mid", "input": "a", "next": "q4"}
+    ],
+    "testString": "abaa"
+  },
+
+  "nfa-contains-aab": {
+    "type": "NFA",
+    "states": "q0, q1, q2, q3",
+    "alphabet": "a, b",
+    "start": "q0",
+    "accept": "q3",
+    "transitions": [
+      {"state": "q0", "input": "a", "next": "q0"},
+      {"state": "q0", "input": "b", "next": "q0"},
+      {"state": "q0", "input": "a", "next": "q1"},
+      {"state": "q1", "input": "a", "next": "q2"},
+      {"state": "q2", "input": "b", "next": "q3"},
+      {"state": "q3", "input": "a", "next": "q3"},
+      {"state": "q3", "input": "b", "next": "q3"}
+    ],
+    "testString": "baaba"
+  },
+
+  "nfa-last-2nd-3rd-1": {
+    "type": "NFA",
+    "states": "q0, q1, q2, q3",
+    "alphabet": "0, 1",
+    "start": "q0",
+    "accept": "q2, q3",
+    "transitions": [
+      {"state": "q0", "input": "0", "next": "q0"},
+      {"state": "q0", "input": "1", "next": "q0"},
+      {"state": "q0", "input": "1", "next": "q1"},
+      {"state": "q1", "input": "0", "next": "q2"},
+      {"state": "q1", "input": "1", "next": "q2"},
+      {"state": "q2", "input": "0", "next": "q3"},
+      {"state": "q2", "input": "1", "next": "q3"}
+    ],
+    "testString": "0100"
   }
 };
 
