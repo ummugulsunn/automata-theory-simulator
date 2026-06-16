@@ -2242,47 +2242,19 @@ const PRESETS = {
   },
   "pda-abcd": {
     "type": "PDA",
-    "states": "q0, q1, q2, q3",
+    "states": "s0, s1, q0, q1, h",
     "alphabet": "a, b, c, d",
-    "gamma": "$",
-    "start": "q0",
-    "accept": "q0, q3",
+    "gamma": "a, c, X",
+    "start": "s0",
+    "accept": "h",
     "transitions": [
-      {
-        "state": "q0",
-        "input": "a",
-        "pop": "ε",
-        "next": "q1",
-        "push": "ε"
-      },
-      {
-        "state": "q1",
-        "input": "b",
-        "pop": "ε",
-        "next": "q0",
-        "push": "ε"
-      },
-      {
-        "state": "q0",
-        "input": "c",
-        "pop": "ε",
-        "next": "q2",
-        "push": "ε"
-      },
-      {
-        "state": "q2",
-        "input": "d",
-        "pop": "ε",
-        "next": "q3",
-        "push": "ε"
-      },
-      {
-        "state": "q3",
-        "input": "c",
-        "pop": "ε",
-        "next": "q2",
-        "push": "ε"
-      }
+      {"state": "s0", "input": "ε", "pop": "ε", "next": "s0", "push": "X"},
+      {"state": "s0", "input": "a", "pop": "ε", "next": "s1", "push": "a"},
+      {"state": "s1", "input": "b", "pop": "a", "next": "s0", "push": "ε"},
+      {"state": "s0", "input": "ε", "pop": "X", "next": "q0", "push": "X"},
+      {"state": "q0", "input": "c", "pop": "ε", "next": "q1", "push": "c"},
+      {"state": "q1", "input": "d", "pop": "c", "next": "q0", "push": "ε"},
+      {"state": "q0", "input": "ε", "pop": "X", "next": "h", "push": "ε"}
     ],
     "testString": "ababcdcd"
   },
