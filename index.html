@@ -20,35 +20,35 @@
        DESIGN SYSTEM — Dark mode engineering aesthetic
        ═══════════════════════════════════════════════════════════════ */
     :root {
-      --bg-primary: #0a0e17;
-      --bg-secondary: #111827;
-      --bg-tertiary: #1a2235;
-      --bg-elevated: #1f2a40;
-      --bg-input: #0d1321;
+      --bg-primary: #05070a;
+      --bg-secondary: rgba(13, 19, 33, 0.65);
+      --bg-tertiary: rgba(26, 34, 53, 0.7);
+      --bg-elevated: rgba(31, 42, 64, 0.85);
+      --bg-input: rgba(0, 0, 0, 0.3);
 
-      --accent-cyan: #06d6a0;
-      --accent-cyan-dim: #06d6a033;
-      --accent-blue: #4cc9f0;
-      --accent-purple: #7b61ff;
-      --accent-pink: #f72585;
-      --accent-orange: #ff9f1c;
+      --accent-cyan: #00f0ff;
+      --accent-cyan-dim: rgba(0, 240, 255, 0.15);
+      --accent-blue: #0088ff;
+      --accent-purple: #b026ff;
+      --accent-pink: #ff007f;
+      --accent-orange: #ffaa00;
 
-      --color-accept: #06d6a0;
-      --color-reject: #ef4444;
-      --color-running: #4cc9f0;
+      --color-accept: #00f0ff;
+      --color-reject: #ff003c;
+      --color-running: #0088ff;
 
-      --text-primary: #e8ecf4;
-      --text-secondary: #8b99b0;
-      --text-tertiary: #5a6a80;
+      --text-primary: #f0f4f8;
+      --text-secondary: #94a3b8;
+      --text-tertiary: #475569;
 
-      --border-subtle: #1e2d44;
-      --border-focus: #06d6a0;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-focus: #00f0ff;
 
-      --radius-sm: 6px;
-      --radius-md: 10px;
-      --shadow-glow: 0 0 20px rgba(6, 214, 160, 0.15);
-      --transition-fast: 150ms ease;
-      --transition-med: 250ms ease;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --shadow-glow: 0 0 15px rgba(0, 240, 255, 0.3);
+      --transition-fast: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-med: 300ms cubic-bezier(0.4, 0, 0.2, 1);
 
       --font-sans: 'Inter', -apple-system, system-ui, sans-serif;
       --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
@@ -516,6 +516,7 @@
     <h1><span class="logo-icon">λ</span> Automata Theory Simulator</h1>
     <div style="display:flex;align-items:center;gap:12px;">
       <span class="header-meta">DFA · NFA · PDA · TM</span>
+      <button class="btn btn-primary" id="btn-header-load" type="button" style="display:none; padding: 6px 14px;">▶ Quick Load</button>
       <button class="btn-tools" id="btn-open-tools" type="button">🔧 Araçlar</button>
     </div>
   </header>
@@ -530,65 +531,65 @@
       <select id="preset-select">
         <option value="">— Load Example —</option>
         <optgroup label="DFA (Sonlu Otomat)">
-          <option value="dfa-even-zeros">DFA: Çift sayıda 0</option>
-          <option value="dfa-ends-01">DFA: "01" ile biten</option>
-          <option value="dfa-0star-1star">DFA: 0*1* (İçinde "10" yok) ⭐</option>
-          <option value="dfa-single-one">DFA: 0*10* (Sadece bir 1) ⭐</option>
-          <option value="dfa-no-101">DFA: "101" İçermeyen (Kuyu) ⭐</option>
-          <option value="dfa-max-3-a">DFA: Max 3 tane 'a' (Kuyu) ⭐</option>
-          <option value="dfa-exactly-one-a">DFA: Sadece 1 tane 'a' ⭐</option>
-          <option value="dfa-at-least-one-a-one-b">DFA: En az bir 'a' VE 'b' ⭐</option>
-          <option value="dfa-length-3">DFA: Sadece 3 Uzunluklu ⭐</option>
+          <option value="dfa-even-zeros">DFA: n(0) mod 2 = 0 (Çift sayıda 0)</option>
+          <option value="dfa-ends-01">DFA: (0|1)*01 ("01" ile biten)</option>
+          <option value="dfa-0star-1star">DFA: 0*1* (0'lardan sonra 1'ler gelir) ⭐</option>
+          <option value="dfa-single-one">DFA: 0*10* (Sadece bir tane 1 içerir) ⭐</option>
+          <option value="dfa-no-101">DFA: !(...101...) ("101" alt katarını içermeyen) ⭐</option>
+          <option value="dfa-max-3-a">DFA: n(a) ≤ 3 (En fazla 3 tane 'a' içeren) ⭐</option>
+          <option value="dfa-exactly-one-a">DFA: n(a) = 1 (Tam olarak 1 tane 'a' içeren) ⭐</option>
+          <option value="dfa-at-least-one-a-one-b">DFA: n(a)≥1 ∧ n(b)≥1 (En az bir 'a' ve 'b') ⭐</option>
+          <option value="dfa-length-3">DFA: |w| = 3 (Sadece 3 harf uzunluğunda) ⭐</option>
         </optgroup>
         <optgroup label="NFA (Belirli Olmayan)">
-          <option value="nfa-ends-ab">NFA: "ab" ile biten</option>
-          <option value="nfa-epsilon">NFA: ε-geçişli örnek</option>
-          <option value="nfa-ends-00-or-11">NFA: Sonu 00 veya 11 📋</option>
+          <option value="nfa-ends-ab">NFA: (a|b)*ab ("ab" ile biten)</option>
+          <option value="nfa-epsilon">NFA: ε-NFA (Epsilon geçişli basit örnek)</option>
+          <option value="nfa-ends-00-or-11">NFA: (0|1)*(00|11) (Sonu "00" veya "11") 📋</option>
           <option value="nfa-abstar-union">NFA: ab*a ∪ ba*b (Dönüşüm Pratiği) ⭐</option>
-          <option value="nfa-first-eq-last">NFA: İlk=Son Harf (0(0∪1)*0 ∪ ...) ⭐</option>
-          <option value="nfa-contains-abb">NFA: İçinde "abb" Geçen ⭐</option>
-          <option value="nfa-ba-start-aab-end">NFA: "ba" ile başla, "aab" ile bit ⭐</option>
-          <option value="nfa-ends-b-or-aa">NFA: Sonu "b" veya "aa" ile biten ⭐</option>
-          <option value="nfa-contains-aab">NFA: İçinde "aab" Geçen ⭐</option>
-          <option value="nfa-last-2nd-3rd-1">NFA: Sondan 2. veya 3. Harfi 1 ⭐</option>
+          <option value="nfa-first-eq-last">NFA: x...x (İlk harf = Son harf) ⭐</option>
+          <option value="nfa-contains-abb">NFA: (a|b)*abb(a|b)* (İçinde "abb" geçen) ⭐</option>
+          <option value="nfa-ba-start-aab-end">NFA: ba(a|b)*aab ("ba" ile başlayıp "aab" ile biten) ⭐</option>
+          <option value="nfa-ends-b-or-aa">NFA: (a|b)*(b|aa) (Sonu "b" veya "aa" ile biten) ⭐</option>
+          <option value="nfa-contains-aab">NFA: (a|b)*aab(a|b)* (İçinde "aab" geçen) ⭐</option>
+          <option value="nfa-last-2nd-3rd-1">NFA: (0|1)*1(0|1)(0|1)? (Sondan 2. veya 3. harfi '1') ⭐</option>
         </optgroup>
         <optgroup label="PDA — Temel">
-          <option value="pda-anbn">PDA: aⁿbⁿ (Eşitlik)</option>
-          <option value="pda-wcwr">PDA: wcwᴿ (Simetri)</option>
-          <option value="pda-equal-ab">PDA: #(a)=#(b) (Sırasız Eşit)</option>
+          <option value="pda-anbn">PDA: aⁿbⁿ (Eşit sayıda a ve b)</option>
+          <option value="pda-wcwr">PDA: wcwᴿ (Ortası 'c' olan palindrom)</option>
+          <option value="pda-equal-ab">PDA: n(a) = n(b) (a ve b sayıları eşit)</option>
         </optgroup>
         <optgroup label="PDA — İleri Düzey 🚨">
-          <option value="pda-ak-b2k-dd">PDA: aᵏb²ᵏdd (İki Katı)</option>
-          <option value="pda-abk-ck1">PDA: abᵏcᵏ⁺¹ (Fazladan Harf)</option>
-          <option value="pda-union">PDA: aⁿbcⁿ ∪ cⁿbaⁿ (Veya)</option>
-          <option value="pda-abcd">PDA: (ab)*(cd)* (Düzenli)</option>
-          <option value="pda-multi-sep">PDA: Çoklu Ayırıcı (aa w bb wR cc)</option>
-          <option value="pda-na-lt-nb">PDA: nₐ < n_b (Eşitsizlik)</option>
-          <option value="pda-range">PDA: aⁿbᵐ (n≤m≤2n)</option>
-          <option value="pda-nested-abcd-ee">PDA: aⁿbᵏcᵏdⁿee (İçiçe Eşleştirme) 📋</option>
-          <option value="pda-combine-match">PDA: aⁱbⁱ⁺jcʲ (Kombine Eşleştirme) ⭐</option>
-          <option value="pda-balanced">PDA: Parantez Dengelemesi ⭐</option>
+          <option value="pda-ak-b2k-dd">PDA: aᵏb²ᵏdd</option>
+          <option value="pda-abk-ck1">PDA: abᵏcᵏ⁺¹</option>
+          <option value="pda-union">PDA: aⁿbcⁿ ∪ cⁿbaⁿ</option>
+          <option value="pda-abcd">PDA: (ab)*(cd)*</option>
+          <option value="pda-multi-sep">PDA: aa w bb wᴿ cc</option>
+          <option value="pda-na-lt-nb">PDA: nₐ &lt; n_b</option>
+          <option value="pda-range">PDA: aⁿbᵐ (n ≤ m ≤ 2n)</option>
+          <option value="pda-nested-abcd-ee">PDA: aⁿbᵏcᵏdⁿee 📋</option>
+          <option value="pda-combine-match">PDA: aⁱbⁱ⁺ʲcʲ ⭐</option>
+          <option value="pda-balanced">PDA: S → (S) | SS | ε ⭐</option>
         </optgroup>
         <optgroup label="TM — Temel">
-          <option value="tm-anbn">TM: aⁿbⁿ (İşaretleme)</option>
-          <option value="tm-binary-inc">TM: Binary +1</option>
-          <option value="tm-parity">TM: Çift/Tek Kontrol</option>
+          <option value="tm-anbn">TM: aⁿbⁿ (İşaretleyerek eşleştirme)</option>
+          <option value="tm-binary-inc">TM: f(n) = n + 1 (İkili sayıya +1 ekleme)</option>
+          <option value="tm-parity">TM: n(0) mod 2 (0 sayısının tek/çift kontrolü)</option>
         </optgroup>
         <optgroup label="TM — İleri Düzey 🚨">
-          <option value="tm-subtract">TM: Çıkarma (n−m)</option>
-          <option value="tm-copy">TM: Katar Kopyalama</option>
-          <option value="tm-reverse-concat">TM: Tersini Birleştir</option>
-          <option value="tm-reverse-inplace">TM: Tersine Çevirme</option>
-          <option value="tm-shift-delete">TM: Kaydırma ve Silme</option>
-          <option value="tm-odd-even-transform">TM: Tek/Çift Dönüşümü</option>
-          <option value="tm-substring">TM: Alt Katar Arama</option>
-          <option value="tm-replace-c-to-d">TM: c→d Harf Dönüştürme 📋</option>
-          <option value="tm-count-even-zeros">TM: 0-Sayısı Çift/Tek 📋</option>
-          <option value="tm-swap-ab">TM: a↔b Karşılıklı Dönüştürme ⭐</option>
-          <option value="tm-erase-all">TM: Tamamen Silici ⭐</option>
-          <option value="tm-search-left">TM: Sola # Arama ⭐</option>
-          <option value="tm-reject-aba">TM: "aba" İçermeyen (Kuyu) ⭐</option>
-          <option value="tm-count-a">TM: A'ları Sayıp Ekleme ⭐</option>
+          <option value="tm-subtract">TM: f(n,m) = n - m (Çıkarma işlemi)</option>
+          <option value="tm-copy">TM: w → ww (Katarı kopyalama)</option>
+          <option value="tm-reverse-concat">TM: w → wwᴿ (Katarın tersini sonuna ekleme)</option>
+          <option value="tm-reverse-inplace">TM: w → wᴿ (Katarı yerinde tersine çevirme)</option>
+          <option value="tm-shift-delete">TM: aw → w (İlk harfi silip sola kaydırma)</option>
+          <option value="tm-odd-even-transform">TM: |w|%2=0 ? X : Y (Uzunluğa göre dönüştürme)</option>
+          <option value="tm-substring">TM: w ∈ Σ*uΣ* (Alt katar yakalama)</option>
+          <option value="tm-replace-c-to-d">TM: c → d ('c' harflerini 'd' yap) 📋</option>
+          <option value="tm-count-even-zeros">TM: n(0) mod 2 (0-Sayısı Çift mi?) 📋</option>
+          <option value="tm-swap-ab">TM: a↔b ('a'ları 'b', 'b'leri 'a' yap) ⭐</option>
+          <option value="tm-erase-all">TM: w → ε (Şeritteki tüm harfleri sil) ⭐</option>
+          <option value="tm-search-left">TM: ←# (Sola doğru '#' karakterini ara) ⭐</option>
+          <option value="tm-reject-aba">TM: !(...aba...) ("aba" içermeyenler) ⭐</option>
+          <option value="tm-count-a">TM: w → w1ⁿ(a) (A'ları sayıp sona 1 ekle) ⭐</option>
         </optgroup>
       </select>
     </div>
@@ -605,41 +606,41 @@
     </div>
 
     <div class="form-group">
-      <label for="input-states">States (Q)</label>
+      <label for="input-states"><span class="input-icon" style="color:var(--accent-purple); font-weight:700;">Q</span> States</label>
       <input type="text" id="input-states" placeholder="q0, q1, q2">
-      <div class="hint-text">Comma-separated</div>
+      <div class="hint-text">Comma-separated list</div>
     </div>
 
     <div class="form-group">
-      <label for="input-alphabet">Input Alphabet (Σ)</label>
+      <label for="input-alphabet"><span class="input-icon" style="color:var(--accent-cyan); font-weight:700;">Σ</span> Input Alphabet</label>
       <input type="text" id="input-alphabet" placeholder="0, 1">
-      <div class="hint-text">Comma-separated</div>
+      <div class="hint-text">Comma-separated list</div>
     </div>
 
     <div class="form-group" id="group-gamma" style="display:none;">
-      <label for="input-gamma" id="label-gamma">Stack Alphabet (Γ)</label>
+      <label for="input-gamma" id="label-gamma"><span class="input-icon" style="color:var(--accent-blue); font-weight:700;">Γ</span> Stack Alphabet</label>
       <input type="text" id="input-gamma" placeholder="a, b, Z, $">
-      <div class="hint-text" id="hint-gamma">Include stack bottom marker</div>
+      <div class="hint-text" id="hint-gamma">Include bottom marker</div>
     </div>
 
     <div class="form-group">
-      <label for="input-start">Start State (q₀)</label>
+      <label for="input-start"><span class="input-icon" style="color:var(--accent-orange); font-weight:700;">q₀</span> Start State</label>
       <input type="text" id="input-start" placeholder="q0">
     </div>
 
     <div class="form-group">
-      <label for="input-accept">Accept States (F)</label>
+      <label for="input-accept"><span class="input-icon" style="color:var(--color-accept); font-weight:700;">F</span> Accept States</label>
       <input type="text" id="input-accept" placeholder="q2">
-      <div class="hint-text">Comma-separated</div>
+      <div class="hint-text">Comma-separated list</div>
     </div>
 
     <hr class="separator">
 
     <div class="form-group">
-      <label>Transition Rules (δ)</label>
-      <div id="transition-header-hint" class="hint-text" style="margin-bottom:8px;"></div>
+      <label><span class="input-icon" style="color:var(--accent-pink); font-weight:700;">δ</span> Transition Rules</label>
+      <div id="transition-header-hint" class="hint-text" style="margin-bottom:12px; color:var(--text-secondary); font-style:italic;"></div>
       <div id="transitions-container"></div>
-      <button class="btn btn-sm" id="btn-add-transition" type="button">+ Add Rule</button>
+      <button class="btn btn-sm" id="btn-add-transition" type="button" style="background:var(--bg-tertiary); border:1px dashed var(--border-subtle); color:var(--text-secondary); margin-top:10px;">+ Add Rule</button>
     </div>
 
     <button class="btn btn-primary" id="btn-load-machine" type="button">▶ Load Machine</button>
@@ -790,6 +791,7 @@ const traceHeader         = $('trace-header');
 const traceBody           = $('trace-body');
 const inputError          = $('input-error');
 const presetSelect        = $('preset-select');
+const btnHeaderLoad       = $('btn-header-load');
 
 // ─── Helpers ─────────────────────────────────────────────────────
 function parseCSV(str) {
@@ -840,46 +842,46 @@ function addTransitionRow() {
 
   if (type === 'DFA' || type === 'NFA') {
     row.innerHTML = `
-      <span class="transition-label">δ(</span>
+      <span class="transition-label" style="color:var(--accent-pink); font-weight:600;">δ(</span>
       <input type="text" class="tr-state" placeholder="q0">
       <span class="transition-label">,</span>
       <input type="text" class="tr-input" placeholder="${type === 'NFA' ? 'a/ε' : 'a'}">
       <span class="transition-label">)</span>
-      <span class="arrow">→</span>
+      <span class="arrow" style="margin: 0 4px; color:var(--accent-cyan); font-weight:600;">→</span>
       <input type="text" class="tr-next" placeholder="q1">
-      <button class="remove-btn" title="Remove" onclick="this.parentElement.remove()">×</button>`;
+      <button class="remove-btn" title="Remove" onclick="this.parentElement.remove()">✕</button>`;
   } else if (type === 'PDA') {
     row.innerHTML = `
-      <span class="transition-label">δ(</span>
+      <span class="transition-label" style="color:var(--accent-pink); font-weight:600;">δ(</span>
       <input type="text" class="tr-state" placeholder="q0">
       <span class="transition-label">,</span>
       <input type="text" class="tr-input" placeholder="a/ε" style="width:42px">
       <span class="transition-label">,</span>
       <input type="text" class="tr-pop" placeholder="$/ε" style="width:42px">
       <span class="transition-label">)</span>
-      <span class="arrow">→</span>
-      <span class="transition-label">(</span>
+      <span class="arrow" style="margin: 0 4px; color:var(--accent-cyan); font-weight:600;">→</span>
+      <span class="transition-label" style="color:var(--accent-blue);">(</span>
       <input type="text" class="tr-next" placeholder="q1">
-      <span class="transition-label">,</span>
+      <span class="transition-label" style="color:var(--accent-blue);">,</span>
       <input type="text" class="tr-push" placeholder="a$/ε" style="width:50px">
-      <span class="transition-label">)</span>
-      <button class="remove-btn" title="Remove" onclick="this.parentElement.remove()">×</button>`;
+      <span class="transition-label" style="color:var(--accent-blue);">)</span>
+      <button class="remove-btn" title="Remove" onclick="this.parentElement.remove()">✕</button>`;
   } else if (type === 'TM') {
     row.innerHTML = `
-      <span class="transition-label">δ(</span>
+      <span class="transition-label" style="color:var(--accent-pink); font-weight:600;">δ(</span>
       <input type="text" class="tr-state" placeholder="q0">
       <span class="transition-label">,</span>
       <input type="text" class="tr-input" placeholder="a/B">
       <span class="transition-label">)</span>
-      <span class="arrow">→</span>
-      <span class="transition-label">(</span>
+      <span class="arrow" style="margin: 0 4px; color:var(--accent-cyan); font-weight:600;">→</span>
+      <span class="transition-label" style="color:var(--accent-orange);">(</span>
       <input type="text" class="tr-next" placeholder="q1">
-      <span class="transition-label">,</span>
+      <span class="transition-label" style="color:var(--accent-orange);">,</span>
       <input type="text" class="tr-write" placeholder="X">
-      <span class="transition-label">,</span>
+      <span class="transition-label" style="color:var(--accent-orange);">,</span>
       <input type="text" class="tr-dir" placeholder="R" style="width:34px">
-      <span class="transition-label">)</span>
-      <button class="remove-btn" title="Remove" onclick="this.parentElement.remove()">×</button>`;
+      <span class="transition-label" style="color:var(--accent-orange);">)</span>
+      <button class="remove-btn" title="Remove" onclick="this.parentElement.remove()">✕</button>`;
   }
   transitionsContainer.appendChild(row);
 }
@@ -1073,15 +1075,16 @@ function buildGraph() {
   network = new vis.Network(container, { nodes: visNodes, edges: visEdges }, {
     physics: {
       enabled: true,
-      solver: 'forceAtlas2Based',
-      forceAtlas2Based: {
-        gravitationalConstant: -50,
-        centralGravity: 0.01,
-        springLength: 160,
-        springConstant: 0.035,
-        damping: 0.5
+      solver: 'barnesHut',
+      barnesHut: {
+        gravitationalConstant: -2000,
+        centralGravity: 0.1,
+        springLength: 150,
+        springConstant: 0.04,
+        damping: 0.5,
+        avoidOverlap: 1
       },
-      stabilization: { iterations: 250 }
+      stabilization: { iterations: 200 }
     },
     interaction: { hover: true, zoomView: true, dragView: true },
     layout: { improvedLayout: true },
@@ -4415,7 +4418,20 @@ function loadPreset(id) {
 // ═══════════════════════════════════════════════════════════════
 machineTypeSelect.addEventListener('change', onMachineTypeChange);
 btnAddTransition.addEventListener('click', () => addTransitionRow());
-presetSelect.addEventListener('change', () => { if (presetSelect.value) loadPreset(presetSelect.value); });
+presetSelect.addEventListener('change', () => { 
+  if (presetSelect.value) {
+    loadPreset(presetSelect.value); 
+    btnHeaderLoad.style.display = 'inline-flex';
+    btnHeaderLoad.style.animation = 'pulse-auto 1.5s ease infinite';
+    setTimeout(() => { btnHeaderLoad.style.animation = 'none'; }, 3000);
+  } else {
+    btnHeaderLoad.style.display = 'none';
+  }
+});
+btnHeaderLoad.addEventListener('click', () => {
+  btnHeaderLoad.style.animation = 'none';
+  btnLoadMachine.click();
+});
 
 btnLoadMachine.addEventListener('click', () => {
   const def = parseMachineDefinition();
