@@ -5,73 +5,127 @@
 [![CSS3](https://img.shields.svg/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)](https://www.w3.org/Style/CSS/)
 [![License: MIT](https://img.shields.svg/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-A comprehensive, interactive web-based simulator for **Automata Theory and Formal Languages**. Built as a high-performance Single-Page Application (SPA) with no external framework dependencies, this tool visualizes and simulates the core computational models dynamically.
+An advanced, interactive web-based simulator designed to visualize and test computational models from **Automata Theory and Formal Languages**. Built purely with native web technologies (ES6+ JS, CSS Variables, and HTML5), this Single-Page Application (SPA) allows students and instructors to build, trace, and convert finite machines dynamically.
 
-## 📸 Screenshots
+---
 
-| Main Simulation Workspace | Trace Engine & Simulation Steps |
+## 📸 Screenshots & UI Design
+
+| 🖥️ Main Workspace (Glassmorphism Dark Theme) | 🔍 Step-by-Step Execution Trace |
 | --- | --- |
 | ![Main Workspace](docs/screenshots/main_interface.png) | ![Trace Steps](docs/screenshots/step_trace.png) |
 
 ---
 
-## 🌟 Key Features
+## 🤖 Supported Computational Models
 
-* **All-in-One Engine:** Define states ($Q$), input alphabet ($\Sigma$), stack alphabet ($\Gamma$), start state ($q_0$), accept states ($F$), and custom transition rules ($\delta$) for **4 different machine types**:
-  * **DFA** (Deterministic Finite Automaton)
-  * **NFA** (Nondeterministic Finite Automaton) - *Supports $\epsilon$-transitions.*
-  * **PDA** (Pushdown Automaton) - *Fully supports stack operations.*
-  * **TM** (Turing Machine) - *Includes an infinite interactive tape.*
-* **Interactive Graph Visualization:** Visualizes nodes and transition edges using `vis-network` with a custom-tuned `barnesHut` physics solver and overlap avoidance algorithms for stable, fluid node physics.
-* **Step-by-Step Execution Trace:**
-  * **DFA/NFA:** Highlights active states and paths.
-  * **PDA:** Visualizes stack operations (Push/Pop) frame-by-frame.
-  * **TM:** Displays a fully interactive tape with Read/Write head movements.
-* **Modern Developer-Tool UI/UX:** Sleek glassmorphism aesthetic, dark mode, neon state indicators, code-editor style transition rules, and a **Quick Load** header panel.
+The simulator dynamically models four distinct levels of the Chomsky hierarchy:
 
----
+### 1. Deterministic Finite Automaton (DFA)
+Defined by the 5-tuple: $M = (Q, \Sigma, \delta, q_0, F)$
+* Simulates standard deterministic transitions.
+* Highlights traps/dead states.
+* Supports minimization.
 
-## 🎓 Academic Example Library
+### 2. Nondeterministic Finite Automaton (NFA)
+Defined by the 5-tuple: $M = (Q, \Sigma, \delta, q_0, F)$
+* Supports **$\epsilon$-transitions** (represented as `ε` or `Λ`).
+* Tracks multiple active states simultaneously on the graph.
+* Computes epsilon closures in real-time.
 
-The simulator comes pre-loaded with **over 40+ presets** inspired by midterm, final, and quiz questions of academic curricula (specifically curated around common university problem sets):
+### 3. Pushdown Automaton (PDA)
+Defined by the 7-tuple: $M = (Q, \Sigma, \Gamma, \delta, q_0, Z_0, F)$
+* Simulates context-free languages.
+* Features a dynamic **Stack Visualization panel** displaying stack changes (Push/Pop) at each execution step.
+* Operates under LIFO (Last-In-First-Out) rules.
 
-* **DFA & NFA:** $0^*1^*$, ending with `01`, containing `abb` or `aab`, sonu `00` veya `11` ile biten, first equals last.
-* **PDA:** $a^n b^n$, $w c w^R$ (palindromes), $a^k b^{2k} dd$ (double match), $a^i b^{i+j} c^j$ (composite stack match), balanced parentheses.
-* **Turing Machine:** Binary Incrementer ($x+1$), subtraction ($n - m$), copying strings ($w \to ww$), reversing strings ($w \to w^R$), symbol replacement ($c \to d$).
-
----
-
-## 🛠️ Getting Started
-
-### Local Setup
-Since this project is built entirely on native web APIs, **no build step is required**. You can open it directly in a browser or host it locally:
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/ummugulsunn/automata-theory-simulator.git
-   cd automata-theory-simulator
-   ```
-
-2. **Serve the app:**
-   You can simply open `index.html` in any browser. For the best local experience (handling assets, testing, etc.), you can run a lightweight server:
-   
-   Using Python:
-   ```bash
-   python3 -m http.server 8080
-   ```
-   
-   Using Node.js:
-   ```bash
-   npx http-server -p 8080 .
-   ```
-
-3. Open `http://localhost:8080` in your web browser.
+### 4. Turing Machine (TM)
+Defined by the 7-tuple: $M = (Q, \Sigma, \Gamma, \delta, q_0, \square, F)$
+* Simulates unrestricted grammars.
+* Features an **infinite interactive tape panel** with visual read/write head movements (Left `L` / Right `R` / Stay `S`).
+* Supports complex arithmetic, string modifications, and deletions.
 
 ---
 
-## 🤝 Contributing & Academic Use
+## 🔧 Advanced Conversion & Minimization Tools
 
-This project was built to assist students studying **Automata Theory & Formal Languages**. Feel free to fork, open issues, or request additions of new transition presets representing classic university exam questions.
+The simulator features a built-in **Dönüşüm Araçları (Conversion Tools)** engine to bridge the gap between theory and practical assignments:
+
+### 1. NFA $\rightarrow$ DFA (Subset Construction)
+* Computes the **$\epsilon$-closure** for all states in the NFA.
+* Generates a step-by-step **Alt Küme Yapılandırma Tablosu (Subset Construction Table)** detailing transition subsets (e.g. $D_1 (\{q_2, q_3\})$).
+* Converts the result into a fully functional DFA and loads it directly into the graph viewer.
+
+### 2. DFA Minimization
+* Removes unreachable states.
+* Groups equivalent states using equivalence partitioning.
+* Redraws the optimized minimal state diagram.
+
+---
+
+## 🎓 Academic Example Library (Fırat Hoca Prep Catalog)
+
+This project has been tailored specifically around classic midterm, final, and quiz questions from university Automata Theory curricula. It includes **over 40+ preconfigured presets**:
+
+### DFA & NFA Presets
+* **$n(0) \pmod 2 = 0$:** Evaluates strings with an even number of zeros.
+* **$(0\|1)^*01$:** Identifies strings ending in `01`.
+* **$0^*1^*$:** Evaluates strings where all zeros precede ones (rejects $10$ alt katarı).
+* **$\text{ba}(a\|b)^*\text{aab}$:** Strings starting with `ba` and ending with `aab`.
+* **$(a\|b)^*abb(a\|b)^* \text{ and } (a\|b)^*aab(a\|b)^*:$** Substring recognition patterns.
+
+### PDA Presets (Context-Free Grammar Matches)
+* **$a^n b^n$:** Equal numbers of sequential $a$'s and $b$'s.
+* **$w c w^R$:** Palindromes separated by $c$.
+* **$a^k b^{2k} dd$:** Double matching algorithm with ending delimiter $dd$.
+* **$a^i b^{i+j} c^j$:** Combined stack match (number of $b$'s equals sum of $a$'s and $c$'s) ⭐.
+* **$a^n b^k c^k d^n ee$:** Nested bracket matching (outer matching $a \leftrightarrow d$, inner matching $b \leftrightarrow c$) 📋.
+* **$S \to (S) \| SS \| \epsilon$:** Balanced parenthesis parser.
+
+### Turing Machine Presets (Arithmetic & Transformations)
+* **$f(n) = n + 1$:** Binary incrementer (applies carry logic from right to left).
+* **$f(n,m) = n - m$:** Unary subtraction.
+* **$w \to ww$:** String copier (marks elements and duplicates them to the right).
+* **$w \to w^R$:** In-place or concatenated string reversing.
+* **$c \to d$:** String scanner and character replacer.
+* **$w \to \epsilon$:** Tape eraser.
+
+---
+
+## 🚀 Technical Features & Performance
+
+* **Premium Visual Style:** Engineered with a sleek **glassmorphism UI layout**, glowing neon accents, and clean workspace separation.
+* **Fluid Physics Solver:** Utilizes `vis-network` configured with a `barnesHut` physics engine and `avoidOverlap: 1` settings to prevent overlapping nodes and maintain an elegant graph shape.
+* **Instant Quick Load:** Selected presets can be instantly loaded into the simulation workspace with a single click using the **Quick Load** header button.
+* **Serverless SPA:** 100% client-side. Zero external framework dependencies (React/Vue/Angular not required). Can be run in any browser instantly.
+
+---
+
+## 🛠️ How to Run Locally
+
+### 1. Clone the repo
+```bash
+git clone https://github.com/ummugulsunn/automata-theory-simulator.git
+cd automata-theory-simulator
+```
+
+### 2. Start a Local Server
+Although you can open `index.html` directly, serving it locally is recommended for managing resources:
+
+Using Python 3:
+```bash
+python3 -m http.server 8080
+```
+
+Using Node.js:
+```bash
+npx http-server -p 8080 .
+```
+
+Open `http://localhost:8080` in your web browser.
+
+---
 
 ## 📄 License
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
