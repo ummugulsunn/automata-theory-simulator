@@ -30,7 +30,7 @@ Built purely with native web technologies (ES6+ JS, CSS Variables, and HTML5), t
 
 | Main Workspace (Glassmorphism Dark Theme) | Step-by-Step Execution Trace |
 | :---: | :---: |
-| ![Main Workspace](docs/screenshots/main_interface.png?v=3) | ![Trace Steps](docs/screenshots/step_trace.png?v=3) |
+| ![Main Workspace](docs/screenshots/main_interface.png?v=2) | ![Trace Steps](docs/screenshots/step_trace.png?v=2) |
 
 ---
 
