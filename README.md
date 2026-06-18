@@ -80,7 +80,7 @@ The simulator features a built-in **Dönüşüm Araçları (Conversion Tools)** 
 
 ---
 
-## Academic Example Library (Fırat Hoca Prep Catalog)
+## Academic Example Library
 
 This project has been tailored specifically around classic midterm, final, and quiz questions from university Automata Theory curricula. It includes **over 40+ preconfigured presets**:
 
