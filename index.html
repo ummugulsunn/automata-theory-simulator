@@ -506,6 +506,29 @@
       border-color: var(--accent-purple); color: #fff; font-weight: 600;
     }
     .btn-load-result:hover { box-shadow: 0 0 15px rgba(123,97,255,0.3); transform: translateY(-1px); }
+
+    .eps-closure-box {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      margin-bottom: 15px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--text-secondary);
+    }
+    .eps-closure-box h5 {
+      color: var(--accent-cyan);
+      margin: 0 0 6px 0;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .eps-closure-box ul {
+      margin: 0;
+      padding-left: 14px;
+      list-style-type: square;
+    }
   </style>
 </head>
 <body>
@@ -4508,17 +4531,41 @@ $('btn-convert-nfa').addEventListener('click', () => {
   }
   try {
     const result = convertNfaToDfa(machine);
-    let html = '<h4>Alt Küme Yapılandırma Tablosu</h4>';
+    
+    // Compute epsilon closures for all states in the NFA for study reference
+    const epsClosures = {};
+    for (const state of machine.states) {
+      const cls = computeEpsClosure([state], machine.transitions);
+      epsClosures[state] = stateSetKey(cls);
+    }
+
+    let html = '<h4>NFA → DFA Dönüşüm Detayları</h4>';
+    
+    // Epsilon Closures Display Box
+    html += '<div class="eps-closure-box"><h5>ε-Kapanışları (Epsilon Closures)</h5><ul>';
+    for (const state of machine.states) {
+      html += `<li><strong>E(${state}):</strong> <code>${epsClosures[state]}</code></li>`;
+    }
+    html += '</ul></div>';
+
+    // Transition & Subset Table
+    html += '<h4>Alt Küme Yapılandırma Tablosu</h4>';
     html += '<table class="tools-result-table"><thead><tr><th>DFA Durumu</th><th>NFA Küme</th>';
     result.machine.alphabet.forEach(a => html += `<th>δ(_, ${a})</th>`);
     html += '<th>Kabul?</th></tr></thead><tbody>';
 
     for (const [key, stateSet] of result.dfaStatesMap) {
       const dName = result.nameMap.get(key);
-      html += `<tr><td><strong>${dName}</strong></td><td>${key}</td>`;
+      html += `<tr><td><strong>${dName}</strong></td><td><code>${key}</code></td>`;
       for (const sym of result.machine.alphabet) {
         const tr = result.machine.transitions.find(t => t.state === dName && t.input === sym);
-        html += `<td>${tr ? tr.next : '—'}</td>`;
+        if (tr) {
+          // Reverse-lookup to find the NFA set representing the next state
+          const targetNfaSet = [...result.nameMap.entries()].find(([k, v]) => v === tr.next)?.[0] || '';
+          html += `<td><strong>${tr.next}</strong> <small style="color:var(--text-tertiary);font-size:10px;">(${targetNfaSet})</small></td>`;
+        } else {
+          html += `<td>—</td>`;
+        }
       }
       const isAcc = result.machine.acceptStates.includes(dName);
       html += `<td>${isAcc ? '✓' : ''}</td></tr>`;
