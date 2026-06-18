@@ -2,6 +2,16 @@
   "name": "automata-theory-simulator",
   "version": "1.0.0",
   "description": "An advanced, interactive web-based simulator designed to visualize and test computational models from Automata Theory and Formal Languages.",
+  "keywords": [
+    "automata-theory",
+    "simulator",
+    "dfa",
+    "nfa",
+    "pda",
+    "turing-machine",
+    "formal-languages",
+    "state-machine"
+  ],
   "homepage": "https://ummugulsunn.github.io/automata-theory-simulator/",
   "repository": {
     "type": "git",
